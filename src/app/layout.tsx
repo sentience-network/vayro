@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     "Earn Betme credits, post predictions, watch partner ads, and share ad revenue. Credits are earned, never bought.",
 };
 
+// Avoid build-time DB access on Render (migrations run at process start).
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
