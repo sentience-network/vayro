@@ -1,0 +1,34 @@
+# Betme on Render — Blueprint
+# Connect this repo in Render → New → Blueprint, or sync an existing service.
+# https://render.com/docs/blueprint-spec
+databases:
+  - name: betme-db
+    plan: free
+    databaseName: betme
+    user: betme
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: betme
+    runtime: node
+    plan: free
+    region: oregon
+    # Deploy this feature branch until merged to main
+    branch: cursor/betme-social-prediction-cca4
+    buildCommand: npm ci && npx prisma generate && npm run build
+    # migrate deploy is idempotent; kept in start for free-tier compatibility
+    # (pre-deploy commands require a paid plan on some accounts)
+    startCommand: npx prisma migrate deploy && npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22.14.0"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: betme-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
