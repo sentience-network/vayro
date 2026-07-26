@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  displayName  String
+  credits      Int      @default(0)
+  accuracyScore Float   @default(0)
+  totalPredictions Int  @default(0)
+  correctPredictions Int @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  markets      Market[]         @relation("Creator")
+  entries      MarketEntry[]
+  creditLedger CreditLedger[]
+  adViews      AdView[]
+  payouts      RevenuePayout[]
+}
+
+model Market {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  description   String
+  category      String
+  optionsJson   String
+  entryFee      Int      @default(10)
+  status        String   @default("OPEN")
+  resolvesAt    DateTime
+  resolvedOption String?
+  adPoolCents   Int      @default(0)
+  participantCount Int   @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  creatorId     String
+  creator       User     @relation("Creator", fields: [creatorId], references: [id])
+
+  entries       MarketEntry[]
+  adViews       AdView[]
+  payouts       RevenuePayout[]
+}
+
+model MarketEntry {
+  id          String   @id @default(cuid())
+  choice      String
+  feePaid     Int
+  isCorrect   Boolean?
+  activityScore Int    @default(1)
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id])
+
+  @@unique([userId, marketId])
+}
+
+model CreditLedger {
+  id        String   @id @default(cuid())
+  amount    Int
+  reason    String
+  metaJson  String?
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AdView {
+  id           String   @id @default(cuid())
+  partnerName  String
+  revenueCents Int
+  creditReward Int
+  completed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  marketId     String?
+  market       Market?  @relation(fields: [marketId], references: [id])
+}
+
+model RevenuePayout {
+  id           String   @id @default(cuid())
+  role         String
+  amountCents  Int
+  shareBps     Int
+  note         String?
+  createdAt    DateTime @default(now())
+
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  marketId     String
+  market       Market   @relation(fields: [marketId], references: [id])
+}
+
+model PlatformConfig {
+  id    String @id @default("default")
+  // Revenue share in basis points (must sum to 10000)
+  betmeBps       Int @default(4000)
+  creatorBps     Int @default(2500)
+  accurateBps    Int @default(2500)
+  participantBps Int @default(1000)
+  signupBonus    Int @default(100)
+  dailyBonus     Int @default(15)
+  adCreditReward Int @default(5)
+  defaultEntryFee Int @default(10)
+}

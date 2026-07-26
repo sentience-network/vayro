@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #071a14;
+  --ink-soft: #12352b;
+  --foam: #eef6f1;
+  --mist: #d7ebe2;
+  --lime: #c8f560;
+  --lime-deep: #9ed12a;
+  --tide: #1f7a63;
+  --sand: #f4ebe0;
+  --ember: #e4572e;
+  --line: rgba(7, 26, 20, 0.12);
+  --glow: rgba(200, 245, 96, 0.35);
+  --background: var(--foam);
+  --foreground: var(--ink);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(200, 245, 96, 0.28), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(31, 122, 99, 0.18), transparent 50%),
+    linear-gradient(180deg, #f7fbf8 0%, var(--foam) 45%, #e7f2ec 100%);
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 50;
+}
+
+::selection {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+  }
+
+  .font-body {
+    font-family: var(--font-body), system-ui, sans-serif;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes ad-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.7s ease-out both;
+}
+
+.animate-rise-delay {
+  animation: rise-in 0.8s ease-out 0.12s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise-in 0.85s ease-out 0.22s both;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 4.5s ease-in-out infinite;
+}
+
+.ad-progress {
+  animation: ad-progress 4s linear forwards;
+}
