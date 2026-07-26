@@ -8,61 +8,76 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  username     String   @unique
-  passwordHash String
-  displayName  String
-  credits      Int      @default(0)
-  accuracyScore Float   @default(0)
-  totalPredictions Int  @default(0)
-  correctPredictions Int @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  username           String   @unique
+  passwordHash       String
+  displayName        String
+  bio                String   @default("New on Betme. Earning credits and calling markets.")
+  avatarHue          Int      @default(160)
+  credits            Int      @default(0)
+  accuracyScore      Float    @default(0)
+  totalPredictions   Int      @default(0)
+  correctPredictions Int      @default(0)
+  creatorScore       Int      @default(0)
+  referralCode       String   @unique
+  referredById       String?
+  referredBy         User?    @relation("Referrals", fields: [referredById], references: [id])
+  referrals          User[]   @relation("Referrals")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  markets      Market[]         @relation("Creator")
-  entries      MarketEntry[]
-  creditLedger CreditLedger[]
-  adViews      AdView[]
-  payouts      RevenuePayout[]
+  markets            Market[]          @relation("Creator")
+  entries            MarketEntry[]
+  creditLedger       CreditLedger[]
+  adViews            AdView[]
+  payouts            RevenuePayout[]
+  badges             UserBadge[]
+  followers          Follow[]          @relation("Following")
+  following          Follow[]          @relation("Follower")
+  sentMessages       Message[]         @relation("SentMessages")
+  conversationMembers ConversationMember[]
+  videoParticipations VideoParticipant[]
+  createdVideoRooms  VideoRoom[]       @relation("VideoHost")
 }
 
 model Market {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  title         String
-  description   String
-  category      String
-  optionsJson   String
-  entryFee      Int      @default(10)
-  status        String   @default("OPEN")
-  resolvesAt    DateTime
-  resolvedOption String?
-  adPoolCents   Int      @default(0)
-  participantCount Int   @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  description      String
+  category         String
+  optionsJson      String
+  entryFee         Int      @default(10)
+  status           String   @default("OPEN")
+  resolvesAt       DateTime
+  resolvedOption   String?
+  adPoolCents      Int      @default(0)
+  participantCount Int      @default(0)
+  shareCount       Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  creatorId     String
-  creator       User     @relation("Creator", fields: [creatorId], references: [id])
+  creatorId        String
+  creator          User     @relation("Creator", fields: [creatorId], references: [id])
 
-  entries       MarketEntry[]
-  adViews       AdView[]
-  payouts       RevenuePayout[]
+  entries          MarketEntry[]
+  adViews          AdView[]
+  payouts          RevenuePayout[]
 }
 
 model MarketEntry {
-  id          String   @id @default(cuid())
-  choice      String
-  feePaid     Int
-  isCorrect   Boolean?
-  activityScore Int    @default(1)
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  choice        String
+  feePaid       Int
+  isCorrect     Boolean?
+  activityScore Int      @default(1)
+  createdAt     DateTime @default(now())
 
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  marketId    String
-  market      Market   @relation(fields: [marketId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id])
 
   @@unique([userId, marketId])
 }
@@ -93,28 +108,120 @@ model AdView {
 }
 
 model RevenuePayout {
-  id           String   @id @default(cuid())
-  role         String
-  amountCents  Int
-  shareBps     Int
-  note         String?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  role        String
+  amountCents Int
+  shareBps    Int
+  note        String?
+  createdAt   DateTime @default(now())
 
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id])
-  marketId     String
-  market       Market   @relation(fields: [marketId], references: [id])
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id])
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  icon        String
+  tier        String   @default("BRONZE")
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  earnedAt DateTime @default(now())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  title     String?
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   ConversationMember[]
+  messages  Message[]
+  videoRooms VideoRoom[]
+}
+
+model ConversationMember {
+  id             String   @id @default(cuid())
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime @default(now())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  @@unique([userId, conversationId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  body           String
+  createdAt      DateTime @default(now())
+  senderId       String
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model VideoRoom {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  status         String   @default("OPEN")
+  offerSdp       String?
+  answerSdp      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  hostId         String
+  host           User     @relation("VideoHost", fields: [hostId], references: [id])
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  participants   VideoParticipant[]
+}
+
+model VideoParticipant {
+  id       String   @id @default(cuid())
+  joinedAt DateTime @default(now())
+  role     String   @default("GUEST")
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  roomId   String
+  room     VideoRoom @relation(fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
 }
 
 model PlatformConfig {
-  id    String @id @default("default")
-  // Revenue share in basis points (must sum to 10000)
-  betmeBps       Int @default(4000)
-  creatorBps     Int @default(2500)
-  accurateBps    Int @default(2500)
-  participantBps Int @default(1000)
-  signupBonus    Int @default(100)
-  dailyBonus     Int @default(15)
-  adCreditReward Int @default(5)
-  defaultEntryFee Int @default(10)
+  id              String @id @default("default")
+  betmeBps        Int    @default(4000)
+  creatorBps      Int    @default(2500)
+  accurateBps     Int    @default(2500)
+  participantBps  Int    @default(1000)
+  signupBonus     Int    @default(100)
+  referralBonus   Int    @default(50)
+  dailyBonus      Int    @default(15)
+  adCreditReward  Int    @default(5)
+  defaultEntryFee Int    @default(10)
 }

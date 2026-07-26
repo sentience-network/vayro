@@ -5,6 +5,7 @@ import { getMarketBySlug, parseOptions, tallyChoices } from "@/lib/markets";
 import { formatCents } from "@/lib/revenue";
 import { JoinPanel } from "@/components/JoinPanel";
 import { ResolvePanel } from "@/components/ResolvePanel";
+import { ShareButtons } from "@/components/ShareButtons";
 import Link from "next/link";
 
 export default async function MarketDetailPage({
@@ -148,13 +149,28 @@ export default async function MarketDetailPage({
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink/40">
               Posted by
             </p>
-            <p className="mt-2 font-display text-2xl font-bold text-ink">
+            <Link
+              href={`/u/${market.creator.username}`}
+              className="mt-2 block font-display text-2xl font-bold text-ink hover:text-tide"
+            >
               {market.creator.displayName}
-            </p>
+            </Link>
             <p className="text-sm text-ink/55">
               @{market.creator.username} ·{" "}
               {Math.round(market.creator.accuracyScore * 100)}% accuracy
             </p>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--line)] bg-white/50 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink/40">
+              Share this call
+            </p>
+            <p className="mt-2 text-sm text-ink/60">
+              {market.shareCount} shares · boost the creator&apos;s board rank
+            </p>
+            <div className="mt-3">
+              <ShareButtons slug={market.slug} title={market.title} path={`/markets/${market.slug}`} />
+            </div>
           </div>
 
           {market.status === "OPEN" && user && (

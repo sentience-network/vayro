@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/markets";
 import { grantCredits } from "@/lib/credits";
+import { evaluateUserBadges } from "@/lib/badges";
 import { CATEGORIES, CREDIT_REWARDS, DEFAULT_ENTRY_FEE } from "@/lib/constants";
 
 export async function GET() {
@@ -63,6 +64,11 @@ export async function POST(req: Request) {
     await grantCredits(userId, CREDIT_REWARDS.createMarket, "create_market_bonus", {
       marketId: market.id,
     });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { creatorScore: { increment: 10 } },
+    });
+    await evaluateUserBadges(userId);
 
     return NextResponse.json({ market }, { status: 201 });
   } catch (error) {

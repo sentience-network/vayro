@@ -1,13 +1,15 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 type Mode = "login" | "signup";
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultReferral = searchParams.get("ref") || "";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,6 +29,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             username: String(form.get("username") || ""),
             displayName: String(form.get("displayName") || ""),
             password: String(form.get("password") || ""),
+            referralCode: String(form.get("referralCode") || "") || undefined,
           };
 
     try {
@@ -37,7 +40,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
-      router.push("/dashboard");
+      router.push(mode === "signup" ? "/social" : "/dashboard");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
@@ -100,10 +103,23 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </label>
 
       {mode === "signup" && (
-        <p className="rounded-md bg-mist/80 px-3 py-2 text-sm text-ink/70">
-          Signup grants <strong>100 Betme credits</strong>. Credits cannot be purchased — only
-          earned.
-        </p>
+        <>
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink/45">
+              Referral code (optional)
+            </span>
+            <input
+              name="referralCode"
+              defaultValue={defaultReferral}
+              className="mt-1.5 w-full rounded-md border border-[var(--line)] bg-white/80 px-3 py-2.5 uppercase"
+              placeholder="FRIENDCODE"
+            />
+          </label>
+          <p className="rounded-md bg-mist/80 px-3 py-2 text-sm text-ink/70">
+            Earn <strong>100 signup credits</strong> (plus referral bonuses). Credits are for
+            wagering on predictions only — never purchased, never cashed out.
+          </p>
+        </>
       )}
 
       {error && <p className="text-sm text-ember">{error}</p>}

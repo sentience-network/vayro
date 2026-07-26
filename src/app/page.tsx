@@ -106,10 +106,31 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-20 md:px-8">
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/40">Social layer</p>
+          <h2 className="mt-3 font-display text-3xl font-bold text-ink md:text-4xl">
+            Badges, follows, leaderboards, chat, and video.
+          </h2>
+          <p className="mt-4 text-ink/65">
+            Track accurate predictors and top creators, follow the people you trust, share calls to
+            other socials, and debate live — while credits stay earn-only and non-cashable.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/social" className="rounded-md bg-ink px-4 py-2.5 text-sm font-semibold text-lime">
+              Enter social
+            </Link>
+            <Link href="/leaderboards" className="rounded-md border border-[var(--line)] bg-white/70 px-4 py-2.5 text-sm font-semibold">
+              View boards
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 pb-20 md:px-8">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/40">Live now</p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-ink">Open predictions</h2>
+            <h2 className="mt-2 font-display text-3xl font-bold text-ink">Popular predictions</h2>
           </div>
           <Link href="/markets" className="text-sm font-semibold text-tide">
             View all

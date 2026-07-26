@@ -1,57 +1,49 @@
 # Betme
 
-A legal social prediction market where **Betme credits are earned, never purchased**. Users post predictions, participants watch partner ads to enter for a flat credit fee, and ad revenue is shared through a transparent waterfall.
+A **social prediction market** where Betme credits are earned (never purchased, never cashed out). Users post predictions, follow sharp callers, earn badges, share to other socials, message friends, and video chat — while partner ads fund a transparent revenue waterfall.
+
+## Core loops
+
+1. **Earn credits** — signup, referrals, daily use, posting, ads  
+2. **Wager credits** — flat fee to enter predictions (entertainment credits only)  
+3. **Share ad revenue** — Betme → creator → accurate predictors → participants  
+4. **Socialize** — follows, profiles, badges, leaderboards, DMs, video rooms  
 
 ## Revenue waterfall
 
-1. **Betme (40%)** — platform share  
-2. **Prediction creator (25%)** — attracts participants  
-3. **Accurate predictors (25%)** — weighted by activity  
-4. **All participants (10%)** — base ad share for everyone who entered  
+| Share | Recipient |
+| --- | --- |
+| 40% | Betme platform |
+| 25% | Prediction creator |
+| 25% | Accurate predictors (activity-weighted) |
+| 10% | All participants |
 
-## Credit economy
+## Social features
 
-Credits are earned via:
-
-- Signup bonus (100)
-- Daily check-in (15)
-- Watching ads to enter (5)
-- Partner ad rewards (20)
-- Posting a market (25)
-
-There is **no credit store**. Flat credit fees unlock predictions; real dollars come from partner ads, not from buying chips or cash wagering.
+- Profiles with bio, badges, accuracy, creator score, referral code  
+- Follow graph + following feed  
+- Leaderboards: accurate predictors, top creators, popular markets  
+- Share to X / Facebook / LinkedIn / copy link  
+- Direct messaging  
+- Peer-to-peer WebRTC video rooms  
 
 ## Stack
 
-- Next.js App Router + TypeScript + Tailwind
-- Prisma + SQLite
-- Cookie session auth (jose + bcryptjs)
+Next.js App Router · TypeScript · Tailwind · Prisma · SQLite · jose sessions · WebRTC
 
 ## Quick start
 
 ```bash
 npm install
+cp .env.example .env
 npx prisma migrate dev
 npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Demo: `demo@betme.app` / `demo1234`  
+Referral codes in seed: `DEMOPLAY`, `MAYAVOSS`, `KENJIPK`
 
-### Demo account
+## Credit policy
 
-- Email: `demo@betme.app`
-- Password: `demo1234`
-
-## Scripts
-
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start local app |
-| `npm run build` | Production build |
-| `npm run db:seed` | Seed demo users & markets |
-| `npm run db:reset` | Reset DB + reseed |
-
-## Product framing
-
-Betme is designed as entertainment + creator economy — not a sportsbook. No credit purchases, no cash stakes, no odds book. Confirm compliance for your launch jurisdictions.
+Betme credits are earned through signup, bringing new users, and platform usage. They **cannot be purchased or exchanged for cash**. They exist only to participate in social predictions.

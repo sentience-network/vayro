@@ -22,24 +22,21 @@ export default function HowItWorksPage() {
               <strong className="text-ink">Signup:</strong> +{CREDIT_REWARDS.signup} credits
             </li>
             <li className="border-b border-[var(--line)] pb-3">
-              <strong className="text-ink">Daily check-in:</strong> +{CREDIT_REWARDS.daily} credits
+              <strong className="text-ink">Bring a friend:</strong> +{CREDIT_REWARDS.referral} to you
+              / +{CREDIT_REWARDS.referredSignup} to them
             </li>
             <li className="border-b border-[var(--line)] pb-3">
-              <strong className="text-ink">Watch ads to enter:</strong> +{CREDIT_REWARDS.adWatch}{" "}
-              credits + fund the market pool
+              <strong className="text-ink">Daily check-in & platform use:</strong> +
+              {CREDIT_REWARDS.daily} and activity rewards
             </li>
             <li className="border-b border-[var(--line)] pb-3">
-              <strong className="text-ink">Partner ad rewards:</strong> +{CREDIT_REWARDS.partnerBonus}{" "}
-              credits
-            </li>
-            <li className="border-b border-[var(--line)] pb-3">
-              <strong className="text-ink">Post a market:</strong> +{CREDIT_REWARDS.createMarket}{" "}
-              credits
+              <strong className="text-ink">Watch ads / post markets:</strong> +
+              {CREDIT_REWARDS.adWatch}–{CREDIT_REWARDS.createMarket} credits
             </li>
           </ul>
           <p className="mt-4 rounded-md bg-mist/80 px-4 py-3 text-sm text-ink/70">
-            Credits cannot be purchased. That keeps Betme outside a paid wagering model and closer
-            to a rewards / social entertainment product.
+            Credits are for wagering inside Betme only. They cannot be purchased or exchanged for
+            cash — earned through signup, referrals, and using the platform.
           </p>
         </div>
 
@@ -70,6 +67,28 @@ export default function HowItWorksPage() {
         <div className="mt-8 [&_li]:border-lime [&_p]:text-foam [&_.text-ink]:text-foam [&_.text-ink\/60]:text-foam/65 [&_.text-tide]:text-lime">
           <ShareWaterfall />
         </div>
+      </section>
+
+      <section className="mt-16 grid gap-8 lg:grid-cols-3">
+        {[
+          {
+            title: "Badges & boards",
+            copy: "Earn achievement badges while leaderboards track accurate predictors, top creators, and popular markets.",
+          },
+          {
+            title: "Follow & share",
+            copy: "Follow sharp callers, fill a social feed, and share predictions to X, Facebook, LinkedIn, or a copied link.",
+          },
+          {
+            title: "Chat & video",
+            copy: "Message friends about calls and jump into peer-to-peer video rooms when the debate needs faces.",
+          },
+        ].map((item) => (
+          <div key={item.title} className="rounded-2xl border border-[var(--line)] bg-white/45 p-5">
+            <p className="font-display text-xl font-bold text-ink">{item.title}</p>
+            <p className="mt-2 text-sm text-ink/65">{item.copy}</p>
+          </div>
+        ))}
       </section>
 
       <section className="mt-16 max-w-3xl">

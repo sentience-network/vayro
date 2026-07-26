@@ -52,8 +52,29 @@ export default async function DashboardPage() {
             Credits power entries. Ad revenue shares reward creators and accurate, active players.
           </p>
         </div>
-        <Link href="/create" className="rounded-md bg-ink px-4 py-2.5 text-sm font-semibold text-lime">
-          Post prediction
+        <div className="flex flex-wrap gap-2">
+          <Link href="/social" className="rounded-md border border-[var(--line)] bg-white/70 px-4 py-2.5 text-sm font-semibold">
+            Social
+          </Link>
+          <Link href={`/u/${user.username}`} className="rounded-md border border-[var(--line)] bg-white/70 px-4 py-2.5 text-sm font-semibold">
+            Profile
+          </Link>
+          <Link href="/create" className="rounded-md bg-ink px-4 py-2.5 text-sm font-semibold text-lime">
+            Post prediction
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl bg-ink p-5 text-foam md:flex md:items-center md:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.14em] text-lime/80">Referral code</p>
+          <p className="mt-1 font-display text-3xl font-extrabold text-lime">{user.referralCode}</p>
+          <p className="mt-1 text-sm text-foam/65">
+            Bring users → both earn credits. Credits wager on markets only — never cash.
+          </p>
+        </div>
+        <Link href={`/signup?ref=${user.referralCode}`} className="mt-4 inline-block text-sm font-semibold text-lime md:mt-0">
+          Share signup link →
         </Link>
       </div>
 
@@ -64,7 +85,7 @@ export default async function DashboardPage() {
             label: "Accuracy",
             value: `${Math.round(user.accuracyScore * 100)}%`,
           },
-          { label: "Predictions", value: `${user.totalPredictions}` },
+          { label: "Creator score", value: `${user.creatorScore}` },
           { label: "Ad share earned", value: formatCents(earnedCents) },
         ].map((stat) => (
           <div key={stat.label} className="rounded-2xl border border-[var(--line)] bg-white/50 p-5">

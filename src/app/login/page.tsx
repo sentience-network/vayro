@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AuthForm } from "@/components/AuthForm";
 
 export default function LoginPage() {
@@ -11,7 +12,9 @@ export default function LoginPage() {
         </p>
       </div>
       <div className="mt-8">
-        <AuthForm mode="login" />
+        <Suspense fallback={<p className="text-center text-sm text-ink/50">Loading…</p>}>
+          <AuthForm mode="login" />
+        </Suspense>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseOptions } from "@/lib/markets";
 import { distributeMarketRevenue } from "@/lib/revenue";
+import { evaluateUserBadges } from "@/lib/badges";
 
 const schema = z.object({
   resolvedOption: z.string().min(1),
@@ -73,6 +74,15 @@ export async function POST(
     });
 
     const distribution = await distributeMarketRevenue(market.id);
+    await prisma.user.update({
+      where: { id: market.creatorId },
+      data: { creatorScore: { increment: 15 } },
+    });
+    for (const entry of market.entries) {
+      await evaluateUserBadges(entry.userId);
+    }
+    await evaluateUserBadges(market.creatorId);
+
     return NextResponse.json({ ok: true, distribution });
   } catch (error) {
     if (error instanceof z.ZodError) {

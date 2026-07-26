@@ -1,10 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { CREDIT_REWARDS } from "../src/lib/constants";
+import { BADGE_CATALOG, CREDIT_REWARDS } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.videoParticipant.deleteMany();
+  await prisma.videoRoom.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversationMember.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.follow.deleteMany();
+  await prisma.userBadge.deleteMany();
+  await prisma.badge.deleteMany();
   await prisma.revenuePayout.deleteMany();
   await prisma.adView.deleteMany();
   await prisma.marketEntry.deleteMany();
@@ -15,6 +23,10 @@ async function main() {
 
   await prisma.platformConfig.create({ data: { id: "default" } });
 
+  for (const badge of BADGE_CATALOG) {
+    await prisma.badge.create({ data: { ...badge } });
+  }
+
   const passwordHash = await bcrypt.hash("demo1234", 10);
 
   const demo = await prisma.user.create({
@@ -22,16 +34,21 @@ async function main() {
       email: "demo@betme.app",
       username: "demo",
       displayName: "Demo Player",
+      bio: "Chasing sharp calls and sharing the ones that move.",
+      avatarHue: 155,
       passwordHash,
-      credits: CREDIT_REWARDS.signup + 40,
+      credits: CREDIT_REWARDS.signup + 90,
       accuracyScore: 0.67,
       totalPredictions: 6,
       correctPredictions: 4,
+      creatorScore: 40,
+      referralCode: "DEMOPLAY",
       creditLedger: {
         create: [
           { amount: CREDIT_REWARDS.signup, reason: "signup_bonus" },
           { amount: 15, reason: "daily_bonus" },
           { amount: 25, reason: "create_market_bonus" },
+          { amount: 50, reason: "referral_bonus" },
         ],
       },
     },
@@ -42,11 +59,15 @@ async function main() {
       email: "maya@betme.app",
       username: "maya",
       displayName: "Maya Voss",
+      bio: "Creator energy. I post markets people actually join.",
+      avatarHue: 28,
       passwordHash,
       credits: 180,
       accuracyScore: 0.8,
       totalPredictions: 10,
       correctPredictions: 8,
+      creatorScore: 120,
+      referralCode: "MAYAVOSS",
       creditLedger: {
         create: [{ amount: CREDIT_REWARDS.signup, reason: "signup_bonus" }],
       },
@@ -58,15 +79,50 @@ async function main() {
       email: "ken@betme.app",
       username: "kenji",
       displayName: "Kenji Park",
+      bio: "Tech culture caller. Always in the comments.",
+      avatarHue: 210,
       passwordHash,
       credits: 120,
       accuracyScore: 0.55,
       totalPredictions: 9,
       correctPredictions: 5,
+      creatorScore: 55,
+      referralCode: "KENJIPK",
+      referredById: demo.id,
       creditLedger: {
-        create: [{ amount: CREDIT_REWARDS.signup, reason: "signup_bonus" }],
+        create: [
+          { amount: CREDIT_REWARDS.signup, reason: "signup_bonus" },
+          { amount: CREDIT_REWARDS.referredSignup, reason: "referred_signup_bonus" },
+        ],
       },
     },
+  });
+
+  const badges = await prisma.badge.findMany();
+  const byKey = Object.fromEntries(badges.map((b) => [b.key, b.id]));
+
+  await prisma.userBadge.createMany({
+    data: [
+      { userId: demo.id, badgeId: byKey.welcome_caller },
+      { userId: demo.id, badgeId: byKey.first_call },
+      { userId: demo.id, badgeId: byKey.sharp_eye },
+      { userId: demo.id, badgeId: byKey.signal_booster },
+      { userId: maya.id, badgeId: byKey.welcome_caller },
+      { userId: maya.id, badgeId: byKey.oracle },
+      { userId: maya.id, badgeId: byKey.crowd_magnet },
+      { userId: ken.id, badgeId: byKey.welcome_caller },
+      { userId: ken.id, badgeId: byKey.first_call },
+      { userId: ken.id, badgeId: byKey.social_spark },
+    ],
+  });
+
+  await prisma.follow.createMany({
+    data: [
+      { followerId: demo.id, followingId: maya.id },
+      { followerId: demo.id, followingId: ken.id },
+      { followerId: ken.id, followingId: maya.id },
+      { followerId: maya.id, followingId: demo.id },
+    ],
   });
 
   const inSevenDays = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -78,7 +134,7 @@ async function main() {
       slug: "summer-finals-mvp-race",
       title: "Who takes Summer Finals MVP?",
       description:
-        "Social prediction on the finals MVP. Watch a short partner ad, spend a flat credit fee, and pick your call. Accurate predictors earn a larger slice of the ad pool.",
+        "Social prediction on the finals MVP. Watch a short partner ad, spend a flat credit fee, and pick your call.",
       category: "Sports",
       optionsJson: JSON.stringify(["Rivera", "Okoye", "Chen", "Other"]),
       entryFee: 10,
@@ -86,6 +142,7 @@ async function main() {
       resolvesAt: inSevenDays,
       adPoolCents: 4200,
       participantCount: 2,
+      shareCount: 14,
       creatorId: maya.id,
     },
   });
@@ -95,7 +152,7 @@ async function main() {
       slug: "next-gadget-drop-week",
       title: "Will the next flagship drop this week?",
       description:
-        "A culture-tech call with a flat entry fee in Betme credits. Credits are earned, never bought. Ad views fund the shared revenue pool.",
+        "A culture-tech call with a flat entry fee in Betme credits. Credits are earned, never bought.",
       category: "Tech",
       optionsJson: JSON.stringify(["Yes", "No"]),
       entryFee: 10,
@@ -103,7 +160,25 @@ async function main() {
       resolvesAt: inThreeDays,
       adPoolCents: 1850,
       participantCount: 1,
+      shareCount: 6,
       creatorId: ken.id,
+    },
+  });
+
+  const openCulture = await prisma.market.create({
+    data: {
+      slug: "city-marathon-sellout",
+      title: "City marathon sold out by Friday?",
+      description: "Crowd heat check. Share it, follow the poster, and call it with earned credits.",
+      category: "Culture",
+      optionsJson: JSON.stringify(["Yes", "No"]),
+      entryFee: 10,
+      status: "OPEN",
+      resolvesAt: inThreeDays,
+      adPoolCents: 960,
+      participantCount: 0,
+      shareCount: 3,
+      creatorId: demo.id,
     },
   });
 
@@ -111,8 +186,7 @@ async function main() {
     data: {
       slug: "festival-headliner-surprise",
       title: "Surprise festival headliner?",
-      description:
-        "Resolved demo market showing how ad revenue flows: Betme first, then the creator, then accurate predictors, then every participant.",
+      description: "Resolved demo market showing the ad revenue waterfall.",
       category: "Entertainment",
       optionsJson: JSON.stringify(["Yes", "No"]),
       entryFee: 10,
@@ -121,6 +195,7 @@ async function main() {
       resolvedOption: "Yes",
       adPoolCents: 5000,
       participantCount: 3,
+      shareCount: 22,
       creatorId: maya.id,
     },
   });
@@ -175,13 +250,11 @@ async function main() {
     ],
   });
 
-  // Pre-seed payouts for the resolved market
   await prisma.revenuePayout.createMany({
     data: [
       {
         marketId: resolved.id,
         role: "PLATFORM",
-        userId: null,
         amountCents: 2000,
         shareBps: 4000,
         note: "Betme platform share",
@@ -237,8 +310,34 @@ async function main() {
     ],
   });
 
-  console.log("Seeded Betme demo data");
+  const conversation = await prisma.conversation.create({
+    data: {
+      isGroup: false,
+      members: {
+        create: [{ userId: demo.id }, { userId: maya.id }],
+      },
+      messages: {
+        create: [
+          {
+            senderId: maya.id,
+            body: "You in on the Finals MVP market? Rivera looks locked.",
+          },
+          {
+            senderId: demo.id,
+            body: "Already called Rivera. Want to hop on a quick video debate?",
+          },
+        ],
+      },
+    },
+  });
+
+  // touch unused vars for clarity in seed logs
+  void openCulture;
+  void conversation;
+
+  console.log("Seeded Betme social demo data");
   console.log("Login: demo@betme.app / demo1234");
+  console.log("Referral codes: DEMOPLAY, MAYAVOSS, KENJIPK");
 }
 
 main()

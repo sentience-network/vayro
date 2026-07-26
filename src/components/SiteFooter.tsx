@@ -7,8 +7,8 @@ export function SiteFooter() {
         <div>
           <p className="font-display text-3xl font-extrabold tracking-tight text-lime">BETME</p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-foam/70">
-            A legal social prediction space. Betme credits are earned through signup, usage, and
-            partner ads — never purchased. Ad revenue funds creators and predictors.
+            Social prediction markets with badges, follows, chat, and video. Betme credits are
+            earned through signup, referrals, and usage — never purchased, never cashed out.
           </p>
         </div>
         <div>
@@ -16,17 +16,27 @@ export function SiteFooter() {
           <ul className="mt-3 space-y-2 text-sm text-foam/75">
             <li>
               <Link className="hover:text-lime" href="/markets">
-                Open markets
+                Markets
               </Link>
             </li>
             <li>
-              <Link className="hover:text-lime" href="/how-it-works">
-                Revenue waterfall
+              <Link className="hover:text-lime" href="/social">
+                Social
               </Link>
             </li>
             <li>
-              <Link className="hover:text-lime" href="/create">
-                Post a prediction
+              <Link className="hover:text-lime" href="/leaderboards">
+                Leaderboards
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:text-lime" href="/messages">
+                Messages
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:text-lime" href="/video">
+                Video
               </Link>
             </li>
           </ul>
@@ -34,9 +44,8 @@ export function SiteFooter() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-lime/80">Legal frame</p>
           <p className="mt-3 text-sm leading-relaxed text-foam/70">
-            Entertainment + creator economy. No credit purchases, no cash wagering, no odds books.
-            Participation uses earned virtual credits; real ad dollars are shared as platform and
-            creator rewards.
+            Entertainment + creator economy. No credit purchases, no cash redemption, no odds books.
+            Ad dollars fund creator and participant rewards.
           </p>
         </div>
       </div>

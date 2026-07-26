@@ -79,3 +79,16 @@ export async function claimDailyBonus(userId: string) {
 export async function grantSignupBonus(userId: string) {
   await grantCredits(userId, CREDIT_REWARDS.signup, "signup_bonus");
 }
+
+export async function grantReferralRewards(newUserId: string, referrerId: string) {
+  await grantCredits(referrerId, CREDIT_REWARDS.referral, "referral_bonus", {
+    referredUserId: newUserId,
+  });
+  await grantCredits(newUserId, CREDIT_REWARDS.referredSignup, "referred_signup_bonus", {
+    referrerId,
+  });
+}
+
+/** Credits are entertainment wagers only — never redeemable for cash. */
+export const CREDIT_POLICY =
+  "Betme credits are earned through signup, referrals, and platform usage. They cannot be purchased or exchanged for cash.";
