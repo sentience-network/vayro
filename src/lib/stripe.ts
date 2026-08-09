@@ -1,0 +1,1 @@
+import Stripe from"stripe";export function stripe(){const key=process.env.STRIPE_SECRET_KEY;if(!key)throw new Error("Stripe is not configured");return new Stripe(key)}export const plusPrices={weekly:process.env.STRIPE_PLUS_WEEKLY_PRICE_ID,monthly:process.env.STRIPE_PLUS_MONTHLY_PRICE_ID,yearly:process.env.STRIPE_PLUS_YEARLY_PRICE_ID}as const;

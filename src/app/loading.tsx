@@ -1,0 +1,1 @@
+export default function Loading(){return <section className="section page" aria-live="polite"><span className="eyebrow">VAYRO</span><h1>Loading your next adventure…</h1><div className="skeletons"><i/><i/><i/></div></section>}

@@ -1,21 +1,2 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-
-export const dynamic = "force-dynamic";
-
-export async function GET() {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    return NextResponse.json({
-      ok: true,
-      service: "betme",
-      time: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("health check failed", error);
-    return NextResponse.json(
-      { ok: false, service: "betme", error: "database_unavailable" },
-      { status: 503 }
-    );
-  }
-}
+import { NextResponse } from "next/server";import { db } from "@/lib/db";
+export async function GET(){const started=Date.now();try{await db.$queryRaw`SELECT 1`;return NextResponse.json({status:"ok",service:"vayro",version:process.env.RENDER_GIT_COMMIT?.slice(0,7)||"local",database:"connected",latencyMs:Date.now()-started,timestamp:new Date().toISOString()});}catch{return NextResponse.json({status:"error",service:"vayro",database:"unavailable",timestamp:new Date().toISOString()},{status:503});}}

@@ -1,227 +1,224 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+}
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  COMPLETED
+}
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+enum FutureProgram {
+  INSURANCE
+  TRACKER
+}
+enum FeePayer {
+  RENTER
+  OWNER
+  SPLIT
 }
 
 model User {
-  id                 String   @id @default(cuid())
-  email              String   @unique
-  username           String   @unique
-  passwordHash       String
-  displayName        String
-  bio                String   @default("New on Betme. Earning credits and calling markets.")
-  avatarHue          Int      @default(160)
-  credits            Int      @default(0)
-  accuracyScore      Float    @default(0)
-  totalPredictions   Int      @default(0)
-  correctPredictions Int      @default(0)
-  creatorScore       Int      @default(0)
-  referralCode       String   @unique
-  referredById       String?
-  referredBy         User?    @relation("Referrals", fields: [referredById], references: [id])
-  referrals          User[]   @relation("Referrals")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  markets            Market[]          @relation("Creator")
-  entries            MarketEntry[]
-  creditLedger       CreditLedger[]
-  adViews            AdView[]
-  payouts            RevenuePayout[]
-  badges             UserBadge[]
-  followers          Follow[]          @relation("Following")
-  following          Follow[]          @relation("Follower")
-  sentMessages       Message[]         @relation("SentMessages")
-  conversationMembers ConversationMember[]
-  videoParticipations VideoParticipant[]
-  createdVideoRooms  VideoRoom[]       @relation("VideoHost")
-}
-
-model Market {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  title            String
-  description      String
-  category         String
-  optionsJson      String
-  entryFee         Int      @default(10)
-  status           String   @default("OPEN")
-  resolvesAt       DateTime
-  resolvedOption   String?
-  adPoolCents      Int      @default(0)
-  participantCount Int      @default(0)
-  shareCount       Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  creatorId        String
-  creator          User     @relation("Creator", fields: [creatorId], references: [id])
-
-  entries          MarketEntry[]
-  adViews          AdView[]
-  payouts          RevenuePayout[]
-}
-
-model MarketEntry {
-  id            String   @id @default(cuid())
-  choice        String
-  feePaid       Int
-  isCorrect     Boolean?
-  activityScore Int      @default(1)
-  createdAt     DateTime @default(now())
-
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
-  marketId      String
-  market        Market   @relation(fields: [marketId], references: [id])
-
-  @@unique([userId, marketId])
-}
-
-model CreditLedger {
-  id        String   @id @default(cuid())
-  amount    Int
-  reason    String
-  metaJson  String?
+  id String @id @default(cuid())
+  email String @unique
+  passwordHash String
+  name String
+  role Role @default(USER)
+  isOwner Boolean @default(false)
+  disabled Boolean @default(false)
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  subscriptionEndsAt DateTime?
+  subscriptionPlan String?
+  airtagBenefitStatus String @default("NOT_AVAILABLE")
+  avatarUrl String?
+  bio String?
   createdAt DateTime @default(now())
-
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  listings Listing[]
+  trips Booking[] @relation("RenterBookings")
+  favorites Favorite[]
+  sentMessages Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  reviews Review[]
+  futureInterests FutureProgramInterest[]
+  notifications Notification[]
+  supportTickets SupportTicket[]
+  savedSearches SavedSearch[]
 }
 
-model AdView {
-  id           String   @id @default(cuid())
-  partnerName  String
-  revenueCents Int
-  creditReward Int
-  completed    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  marketId     String?
-  market       Market?  @relation(fields: [marketId], references: [id])
-}
-
-model RevenuePayout {
-  id          String   @id @default(cuid())
-  role        String
-  amountCents Int
-  shareBps    Int
-  note        String?
-  createdAt   DateTime @default(now())
-
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  marketId    String
-  market      Market   @relation(fields: [marketId], references: [id])
-}
-
-model Badge {
-  id          String   @id @default(cuid())
-  key         String   @unique
-  name        String
+model Listing {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
   description String
-  icon        String
-  tier        String   @default("BRONZE")
-  users       UserBadge[]
-}
-
-model UserBadge {
-  id       String   @id @default(cuid())
-  earnedAt DateTime @default(now())
-  userId   String
-  user     User     @relation(fields: [userId], references: [id])
-  badgeId  String
-  badge    Badge    @relation(fields: [badgeId], references: [id])
-
-  @@unique([userId, badgeId])
-}
-
-model Follow {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  followerId  String
-  follower    User     @relation("Follower", fields: [followerId], references: [id])
-  followingId String
-  following   User     @relation("Following", fields: [followingId], references: [id])
-
-  @@unique([followerId, followingId])
-}
-
-model Conversation {
-  id        String   @id @default(cuid())
-  title     String?
-  isGroup   Boolean  @default(false)
+  category String
+  location String
+  pricePerDay Int
+  securityDeposit Int @default(0)
+  features String[]
+  rules String[]
+  deliveryOptions String[]
+  details Json @default("{}")
+  status ListingStatus @default(ACTIVE)
+  insuranceStatus String @default("NOT_AVAILABLE")
+  trackerStatus String @default("NOT_ENROLLED")
+  feePayer FeePayer @default(RENTER)
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  photos Photo[]
+  bookings Booking[]
+  favorites Favorite[]
+  reviews Review[]
+  availabilityBlocks AvailabilityBlock[]
+  verification VehicleVerification?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  members   ConversationMember[]
-  messages  Message[]
-  videoRooms VideoRoom[]
+  @@index([category, location, status])
 }
 
-model ConversationMember {
-  id             String   @id @default(cuid())
-  joinedAt       DateTime @default(now())
-  lastReadAt     DateTime @default(now())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id])
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
-
-  @@unique([userId, conversationId])
+model Photo {
+  id String @id @default(cuid())
+  url String
+  alt String?
+  position Int @default(0)
+  listingId String
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
-
+model Favorite {
+  userId String
+  listingId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, listingId])
+}
+model Booking {
+  id String @id @default(cuid())
+  listingId String
+  renterId String
+  startDate DateTime @db.Date
+  endDate DateTime @db.Date
+  totalPrice Int
+  subtotal Int @default(0)
+  serviceFee Int @default(0)
+  serviceFeeRate Int @default(1000)
+  renterFee Int @default(0)
+  ownerFee Int @default(0)
+  ownerPayout Int @default(0)
+  status BookingStatus @default(PENDING)
+  note String?
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  renter User @relation("RenterBookings", fields: [renterId], references: [id], onDelete: Cascade)
+  messages Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([listingId, startDate, endDate, status])
+}
+model FutureProgramInterest {
+  id String @id @default(cuid())
+  program FutureProgram
+  userId String
+  listingId String @default("")
+  consentAcknowledged Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([program, userId, listingId])
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  type String
+  title String
+  body String
+  href String?
+  readAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, readAt, createdAt])
+}
+model AvailabilityBlock {
+  id String @id @default(cuid())
+  listingId String
+  startDate DateTime @db.Date
+  endDate DateTime @db.Date
+  note String?
+  createdAt DateTime @default(now())
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  @@index([listingId, startDate, endDate])
+}
+model SupportTicket {
+  id String @id @default(cuid())
+  userId String
+  subject String
+  message String
+  status String @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, status, createdAt])
+}
+model VehicleVerification {
+  id String @id @default(cuid())
+  listingId String @unique
+  status String @default("PENDING")
+  vinLast4 String?
+  registrationConfirmed Boolean @default(false)
+  ownershipConfirmed Boolean @default(false)
+  notes String?
+  submittedAt DateTime @default(now())
+  reviewedAt DateTime?
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+model SavedSearch {
+  id String @id @default(cuid())
+  userId String
+  name String
+  query Json
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
 model Message {
-  id             String   @id @default(cuid())
-  body           String
-  createdAt      DateTime @default(now())
-  senderId       String
-  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  id String @id @default(cuid())
+  body String
+  senderId String
+  recipientId String
+  bookingId String?
+  sender User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  @@index([senderId, recipientId, createdAt])
 }
-
-model VideoRoom {
-  id             String   @id @default(cuid())
-  code           String   @unique
-  status         String   @default("OPEN")
-  offerSdp       String?
-  answerSdp      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  hostId         String
-  host           User     @relation("VideoHost", fields: [hostId], references: [id])
-  conversationId String?
-  conversation   Conversation? @relation(fields: [conversationId], references: [id])
-  participants   VideoParticipant[]
-}
-
-model VideoParticipant {
-  id       String   @id @default(cuid())
-  joinedAt DateTime @default(now())
-  role     String   @default("GUEST")
-  userId   String
-  user     User     @relation(fields: [userId], references: [id])
-  roomId   String
-  room     VideoRoom @relation(fields: [roomId], references: [id])
-
-  @@unique([userId, roomId])
-}
-
-model PlatformConfig {
-  id              String @id @default("default")
-  betmeBps        Int    @default(4000)
-  creatorBps      Int    @default(2500)
-  accurateBps     Int    @default(2500)
-  participantBps  Int    @default(1000)
-  signupBonus     Int    @default(100)
-  referralBonus   Int    @default(50)
-  dailyBonus      Int    @default(15)
-  adCreditReward  Int    @default(5)
-  defaultEntryFee Int    @default(10)
+model Review {
+  id String @id @default(cuid())
+  rating Int
+  comment String
+  authorId String
+  listingId String
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([authorId, listingId])
 }

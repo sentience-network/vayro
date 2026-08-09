@@ -1,0 +1,1 @@
+import Link from"next/link";import{AuthForm}from"@/components/ClientActions";export default function Register(){return <section className="auth"><div className="panel"><span className="eyebrow">JOIN VAYRO</span><h1>The road is yours</h1><AuthForm mode="register"/><p>Already a member? <Link href="/login">Log in</Link></p></div></section>}

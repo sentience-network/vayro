@@ -1,0 +1,1 @@
+import{redirect}from"next/navigation";import{getUser}from"@/lib/auth";import{VehicleListingForm}from"@/components/VehicleListingForm";export default async function New(){if(!await getUser())redirect("/login");return <section className="section page narrow"><VehicleListingForm/></section>}

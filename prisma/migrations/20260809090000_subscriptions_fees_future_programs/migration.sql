@@ -1,0 +1,11 @@
+CREATE TYPE "SubscriptionStatus" AS ENUM ('FREE','ACTIVE','PAST_DUE','CANCELED');
+CREATE TYPE "FutureProgram" AS ENUM ('INSURANCE','TRACKER');
+CREATE TYPE "FeePayer" AS ENUM ('RENTER','OWNER','SPLIT');
+ALTER TABLE "User" ADD COLUMN "subscriptionStatus" "SubscriptionStatus" NOT NULL DEFAULT 'FREE', ADD COLUMN "stripeCustomerId" TEXT, ADD COLUMN "stripeSubscriptionId" TEXT, ADD COLUMN "subscriptionEndsAt" TIMESTAMP(3), ADD COLUMN "subscriptionPlan" TEXT, ADD COLUMN "airtagBenefitStatus" TEXT NOT NULL DEFAULT 'NOT_AVAILABLE';
+CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
+CREATE UNIQUE INDEX "User_stripeSubscriptionId_key" ON "User"("stripeSubscriptionId");
+ALTER TABLE "Listing" ADD COLUMN "insuranceStatus" TEXT NOT NULL DEFAULT 'NOT_AVAILABLE', ADD COLUMN "trackerStatus" TEXT NOT NULL DEFAULT 'NOT_ENROLLED', ADD COLUMN "feePayer" "FeePayer" NOT NULL DEFAULT 'RENTER';
+ALTER TABLE "Booking" ADD COLUMN "subtotal" INTEGER NOT NULL DEFAULT 0, ADD COLUMN "serviceFee" INTEGER NOT NULL DEFAULT 0, ADD COLUMN "serviceFeeRate" INTEGER NOT NULL DEFAULT 1000, ADD COLUMN "renterFee" INTEGER NOT NULL DEFAULT 0, ADD COLUMN "ownerFee" INTEGER NOT NULL DEFAULT 0, ADD COLUMN "ownerPayout" INTEGER NOT NULL DEFAULT 0;
+UPDATE "Booking" SET "subtotal"="totalPrice", "serviceFee"=ROUND("totalPrice" * 0.10), "renterFee"=ROUND("totalPrice" * 0.10), "ownerPayout"="totalPrice", "totalPrice"="totalPrice" + ROUND("totalPrice" * 0.10);
+CREATE TABLE "FutureProgramInterest" ("id" TEXT PRIMARY KEY,"program" "FutureProgram" NOT NULL,"userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"listingId" TEXT NOT NULL DEFAULT '',"consentAcknowledged" BOOLEAN NOT NULL DEFAULT false,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE UNIQUE INDEX "FutureProgramInterest_program_userId_listingId_key" ON "FutureProgramInterest"("program","userId","listingId");

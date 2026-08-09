@@ -1,85 +1,53 @@
-# Betme
+# Vayro
 
-A **social prediction market** where Betme credits are earned (never purchased, never cashed out). Users post predictions, follow sharp callers, earn badges, share to other socials, message friends, and video chat — while partner ads fund a transparent revenue waterfall.
+**Vayro — Rent anything that moves.** A production-oriented peer-to-peer marketplace for cars, RVs, boats, motorcycles, trailers, and recreational vehicles.
 
-## Core loops
+## What works
 
-1. **Earn credits** — signup, referrals, daily use, posting, ads  
-2. **Wager credits** — flat fee to enter predictions (entertainment credits only)  
-3. **Share ad revenue** — Betme → creator → accurate predictors → participants  
-4. **Socialize** — follows, profiles, badges, leaderboards, DMs, video rooms  
+Secure registration/login/logout; renter, owner, and admin roles; location/date/category/price discovery; listing details and multi-photo upload; owner listing creation, editing, pausing, and availability blocks; transactional overlap prevention; booking requests and owner decisions; favorites; saved searches; renter trips; owner earnings/bookings; user messaging and notifications; reviews/ratings; support tickets; pending vehicle-verification submissions; and admin user/listing disable controls.
 
-## Revenue waterfall
+Pricing supports weekly, monthly, and yearly Vayro Plus plans. Booking accounting applies a 10% standard fee or 7.5% active-member fee, while each owner chooses renter-paid, owner-paid, or split fees. Stripe checkout and customer portal endpoints activate only with genuine Stripe keys and Price IDs. Insurance, tracker, identity, email, Cloudinary, and maps remain clearly labeled integration boundaries; no payment, insurance, tracking, or identity result is simulated.
 
-| Share | Recipient |
-| --- | --- |
-| 40% | Betme platform |
-| 25% | Prediction creator |
-| 25% | Accurate predictors (activity-weighted) |
-| 10% | All participants |
+## Local setup
 
-## Social features
-
-- Profiles with bio, badges, accuracy, creator score, referral code  
-- Follow graph + following feed  
-- Leaderboards: accurate predictors, top creators, popular markets  
-- Share to X / Facebook / LinkedIn / copy link  
-- Direct messaging  
-- Peer-to-peer WebRTC video rooms  
-
-## Stack
-
-Next.js App Router · TypeScript · Tailwind · Prisma · PostgreSQL · jose sessions · WebRTC
-
-## Quick start (local)
+Requires Node 20+ and PostgreSQL.
 
 ```bash
-npm install
+npm ci
 cp .env.example .env
-# Start Postgres, then:
-npx prisma migrate dev
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Demo: `demo@betme.app` / `demo1234`  
-Referral codes in seed: `DEMOPLAY`, `MAYAVOSS`, `KENJIPK`
+Demo password for every account: `VayroDemo2026!`
 
-## Deploy on Render
+- Renter: `renter@vayro.test`
+- Owner: `owner@vayro.test`
+- Admin: `admin@vayro.test`
 
-This repo includes a Blueprint at [`render.yaml`](./render.yaml):
+## Production / Render domain
 
-1. In Render: **New → Blueprint** (or open the linked Betme repo service)
-2. Connect `sentience-network/Betme`
-3. Use branch `cursor/betme-social-prediction-cca4` (until merged to `main`)
-4. Render provisions:
-   - `betme` web service (Node)
-   - `betme-db` Postgres
-   - `DATABASE_URL` + generated `AUTH_SECRET`
-5. Build runs `npm ci && prisma generate && next build`
-6. Start runs `prisma migrate deploy && next start`
-
-### First-time seed (optional demo data)
-
-From your machine (or Render Shell), with the **External** Database URL:
+The included `render.yaml` provisions a Node web service and Render PostgreSQL database. Push this project to GitHub, then in Render choose **New → Blueprint**, connect the repository, and apply it. Render assigns an HTTPS address such as `https://vayro.onrender.com`; the exact available hostname is chosen by Render. Set `NEXT_PUBLIC_APP_URL` to that address and redeploy, then seed once from a Render shell:
 
 ```bash
-DATABASE_URL="postgresql://..." npm run db:seed
+npm run db:seed
 ```
 
-Do **not** seed on every deploy — the seed script resets demo tables.
+Do not put seeding in the start command: the demo seed resets data. Build is `npm ci && npm run build`; start is `npm run db:deploy && npm run start`; health check is `/api/health`.
 
-### Manual service settings (if not using Blueprint)
+For a custom domain, add the domain in the Render service's **Settings → Custom Domains** page and copy Render's DNS records to the domain registrar. Keep the generated `onrender.com` address enabled as a fallback.
 
-| Setting | Value |
-| --- | --- |
-| Runtime | Node |
-| Build Command | `npm ci && npx prisma generate && npm run build` |
-| Start Command | `npx prisma migrate deploy && npm run start` |
-| Health Check Path | `/api/health` |
-| `DATABASE_URL` | From Render Postgres |
-| `AUTH_SECRET` | Generate value |
+## Security notes
 
-## Credit policy
+Passwords use bcrypt (cost 12); sessions are signed HTTP-only, same-site cookies; mutations enforce ownership/roles on the server; inputs use Zod; bookings use a database transaction and overlap query. For high-contention production inventory, add a PostgreSQL exclusion constraint or serializable retry around date ranges.
 
-Betme credits are earned through signup, bringing new users, and platform usage. They **cannot be purchased or exchanged for cash**. They exist only to participate in social predictions.
+## Optional production service credentials
+
+- Stripe Billing/Connect: `STRIPE_SECRET_KEY`, `STRIPE_CONNECT_CLIENT_ID`, `STRIPE_PLUS_WEEKLY_PRICE_ID`, `STRIPE_PLUS_MONTHLY_PRICE_ID`, `STRIPE_PLUS_YEARLY_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- Cloudinary: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- Email (example: Resend): `RESEND_API_KEY`
+- Maps (example: Mapbox): `MAPBOX_ACCESS_TOKEN`
+- Identity vendor: `IDENTITY_PROVIDER_API_KEY`
+
+Never commit these secrets. Until they are configured, Vayro shows honest unavailable/pending states instead of fake success.

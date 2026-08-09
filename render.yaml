@@ -1,34 +1,51 @@
-# Betme on Render — Blueprint
-# Connect this repo in Render → New → Blueprint, or sync an existing service.
-# https://render.com/docs/blueprint-spec
 databases:
-  - name: betme-db
+  - name: vayro-db
     plan: free
-    databaseName: betme
-    user: betme
-    postgresMajorVersion: "16"
-
+    databaseName: vayro
+    user: vayro
 services:
   - type: web
-    name: betme
+    name: vayro
     runtime: node
     plan: free
     region: oregon
-    # Deploy this feature branch until merged to main
-    branch: cursor/betme-social-prediction-cca4
-    buildCommand: npm ci && npx prisma generate && npm run build
-    # migrate deploy is idempotent; kept in start for free-tier compatibility
-    # (pre-deploy commands require a paid plan on some accounts)
-    startCommand: npx prisma migrate deploy && npm run start
+    buildCommand: npm ci && npm run build
+    startCommand: npm run db:deploy && npm run start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
-        value: "22.14.0"
+        value: "22"
       - key: DATABASE_URL
-        fromDatabase:
-          name: betme-db
-          property: connectionString
+        fromDatabase: { name: vayro-db, property: connectionString }
       - key: AUTH_SECRET
         generateValue: true
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      # Optional production integrations. Leave unset until real provider
+      # credentials and products are configured; Vayro never simulates them.
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_CONNECT_CLIENT_ID
+        sync: false
+      - key: STRIPE_PLUS_WEEKLY_PRICE_ID
+        sync: false
+      - key: STRIPE_PLUS_MONTHLY_PRICE_ID
+        sync: false
+      - key: STRIPE_PLUS_YEARLY_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAPBOX_ACCESS_TOKEN
+        sync: false
+      - key: IDENTITY_PROVIDER_API_KEY
+        sync: false

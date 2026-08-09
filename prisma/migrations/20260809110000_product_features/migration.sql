@@ -1,0 +1,9 @@
+CREATE TABLE "Notification" ("id" TEXT PRIMARY KEY,"userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"type" TEXT NOT NULL,"title" TEXT NOT NULL,"body" TEXT NOT NULL,"href" TEXT,"readAt" TIMESTAMP(3),"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "Notification_userId_readAt_createdAt_idx" ON "Notification"("userId","readAt","createdAt");
+CREATE TABLE "AvailabilityBlock" ("id" TEXT PRIMARY KEY,"listingId" TEXT NOT NULL REFERENCES "Listing"("id") ON DELETE CASCADE,"startDate" DATE NOT NULL,"endDate" DATE NOT NULL,"note" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "AvailabilityBlock_listingId_startDate_endDate_idx" ON "AvailabilityBlock"("listingId","startDate","endDate");
+CREATE TABLE "SupportTicket" ("id" TEXT PRIMARY KEY,"userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"subject" TEXT NOT NULL,"message" TEXT NOT NULL,"status" TEXT NOT NULL DEFAULT 'OPEN',"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL);
+CREATE INDEX "SupportTicket_userId_status_createdAt_idx" ON "SupportTicket"("userId","status","createdAt");
+CREATE TABLE "VehicleVerification" ("id" TEXT PRIMARY KEY,"listingId" TEXT UNIQUE NOT NULL REFERENCES "Listing"("id") ON DELETE CASCADE,"status" TEXT NOT NULL DEFAULT 'PENDING',"vinLast4" TEXT,"registrationConfirmed" BOOLEAN NOT NULL DEFAULT false,"ownershipConfirmed" BOOLEAN NOT NULL DEFAULT false,"notes" TEXT,"submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"reviewedAt" TIMESTAMP(3));
+CREATE TABLE "SavedSearch" ("id" TEXT PRIMARY KEY,"userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"name" TEXT NOT NULL,"query" JSONB NOT NULL,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "SavedSearch_userId_createdAt_idx" ON "SavedSearch"("userId","createdAt");

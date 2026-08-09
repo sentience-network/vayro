@@ -1,120 +1,56 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
 import { z } from "zod";
-import { getSessionUserId } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { grantCredits } from "@/lib/credits";
-import { CREDIT_REWARDS } from "@/lib/constants";
-
-export async function GET() {
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-
-  const memberships = await prisma.conversationMember.findMany({
-    where: { userId },
-    include: {
-      conversation: {
-        include: {
-          members: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  displayName: true,
-                  avatarHue: true,
-                },
-              },
-            },
-          },
-          messages: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            include: {
-              sender: { select: { username: true, displayName: true } },
-            },
-          },
-        },
-      },
-    },
-    orderBy: { conversation: { updatedAt: "desc" } },
-  });
-
-  return NextResponse.json({
-    conversations: memberships.map((m) => ({
-      id: m.conversation.id,
-      updatedAt: m.conversation.updatedAt,
-      members: m.conversation.members.map((mem) => mem.user),
-      lastMessage: m.conversation.messages[0] ?? null,
-    })),
-  });
-}
-
-const startSchema = z.object({
-  username: z.string().min(2),
-  body: z.string().min(1).max(2000).optional(),
+const schema = z.object({
+  recipientId: z.string().min(1),
+  bookingId: z.string().optional(),
+  body: z.string().trim().min(1).max(2000),
 });
-
-export async function POST(req: Request) {
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-
+export async function POST(request: NextRequest) {
   try {
-    const body = startSchema.parse(await req.json());
-    const other = await prisma.user.findUnique({
-      where: { username: body.username.toLowerCase() },
+    const user = await requireUser(),
+      parsed = schema.safeParse(await request.json());
+    if (!parsed.success)
+      return NextResponse.json(
+        { error: "Write a message under 2,000 characters" },
+        { status: 400 },
+      );
+    if (parsed.data.recipientId === user.id)
+      return NextResponse.json(
+        { error: "You cannot message yourself" },
+        { status: 400 },
+      );
+    const recipient = await db.user.findUnique({
+      where: { id: parsed.data.recipientId },
+      select: { id: true, disabled: true },
     });
-    if (!other) return NextResponse.json({ error: "User not found" }, { status: 404 });
-    if (other.id === userId) {
-      return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
-    }
-
-    const existing = await prisma.conversation.findFirst({
-      where: {
-        isGroup: false,
-        AND: [
-          { members: { some: { userId } } },
-          { members: { some: { userId: other.id } } },
-        ],
-      },
-      include: { members: true },
-    });
-
-    let conversationId = existing?.id;
-    if (!conversationId) {
-      const conversation = await prisma.conversation.create({
-        data: {
-          isGroup: false,
-          members: {
-            create: [{ userId }, { userId: other.id }],
-          },
-        },
+    if (!recipient || recipient.disabled)
+      return NextResponse.json(
+        { error: "This recipient is unavailable" },
+        { status: 404 },
+      );
+    if (parsed.data.bookingId) {
+      const booking = await db.booking.findUnique({
+        where: { id: parsed.data.bookingId },
+        include: { listing: { select: { ownerId: true } } },
       });
-      conversationId = conversation.id;
+      if (
+        !booking ||
+        ![booking.renterId, booking.listing.ownerId].includes(user.id) ||
+        ![booking.renterId, booking.listing.ownerId].includes(recipient.id)
+      )
+        return NextResponse.json(
+          { error: "Invalid booking conversation" },
+          { status: 403 },
+        );
     }
-
-    if (body.body?.trim()) {
-      await prisma.message.create({
-        data: {
-          conversationId,
-          senderId: userId,
-          body: body.body.trim(),
-        },
-      });
-      await prisma.conversation.update({
-        where: { id: conversationId },
-        data: { updatedAt: new Date() },
-      });
-      await grantCredits(userId, CREDIT_REWARDS.messageActivity, "message_activity", {
-        conversationId,
-      });
-    }
-
-    return NextResponse.json({ conversationId }, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid message request" }, { status: 400 });
-    }
-    console.error(error);
-    return NextResponse.json({ error: "Could not start conversation" }, { status: 500 });
+    const [message] = await db.$transaction([
+      db.message.create({ data: { ...parsed.data, senderId: user.id } }),
+      db.notification.create({ data: { userId: recipient.id, type: "MESSAGE", title: `Message from ${user.name}`, body: parsed.data.body.slice(0, 120), href: `/messages?with=${user.id}` } }),
+    ]);
+    return NextResponse.json(message);
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
