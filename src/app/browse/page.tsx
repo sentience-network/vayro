@@ -42,7 +42,7 @@ export default async function Browse({
         ? {
             bookings: {
               none: {
-                status: { in: [BookingStatus.PENDING, BookingStatus.ACCEPTED] },
+                status: { in: [BookingStatus.REQUESTED, BookingStatus.ACCEPTED, BookingStatus.PAYMENT_REQUIRED, BookingStatus.PAID, BookingStatus.ACTIVE] },
                 startDate: { lt: end },
                 endDate: { gt: start },
               },

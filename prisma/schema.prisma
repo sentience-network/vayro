@@ -16,11 +16,19 @@ enum ListingStatus {
   DISABLED
 }
 enum BookingStatus {
+  REQUESTED
   PENDING
   ACCEPTED
+  PAYMENT_REQUIRED
+  PAID
+  ACTIVE
   DECLINED
   CANCELLED
   COMPLETED
+  PAYMENT_FAILED
+  REFUND_PENDING
+  REFUNDED
+  DISPUTED
 }
 enum SubscriptionStatus {
   FREE
@@ -43,6 +51,12 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+  REFUND_PENDING
+  DISPUTED
+}
+enum InspectionType {
+  CHECK_IN
+  CHECK_OUT
 }
 
 model User {
@@ -62,6 +76,7 @@ model User {
   identityVerificationSessionId String? @unique
   identityVerificationStatus String @default("UNVERIFIED")
   identityVerifiedAt DateTime?
+  emailVerifiedAt DateTime?
   subscriptionEndsAt DateTime?
   subscriptionPlan String?
   airtagBenefitStatus String @default("NOT_AVAILABLE")
@@ -78,6 +93,9 @@ model User {
   notifications Notification[]
   supportTickets SupportTicket[]
   savedSearches SavedSearch[]
+  analyticsEvents AnalyticsEvent[]
+  policyAcceptances PolicyAcceptance[]
+  emailDeliveries EmailDelivery[]
 }
 
 model Listing {
@@ -96,6 +114,12 @@ model Listing {
   status ListingStatus @default(ACTIVE)
   insuranceStatus String @default("NOT_AVAILABLE")
   trackerStatus String @default("NOT_ENROLLED")
+  instantBook Boolean @default(false)
+  deliveryRadiusMiles Int @default(0)
+  deliveryBaseFee Int @default(0)
+  deliveryPerMile Int @default(0)
+  latitude Decimal? @db.Decimal(9, 6)
+  longitude Decimal? @db.Decimal(9, 6)
   feePayer FeePayer @default(RENTER)
   ownerId String
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -105,6 +129,7 @@ model Listing {
   reviews Review[]
   availabilityBlocks AvailabilityBlock[]
   verification VehicleVerification?
+  inspections TripInspection[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([category, location, status])
@@ -115,6 +140,11 @@ model Photo {
   url String
   alt String?
   position Int @default(0)
+  sourceUrl String?
+  license String?
+  providerAssetId String?
+  uploadedByOwner Boolean @default(false)
+  isRepresentative Boolean @default(false)
   listingId String
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
@@ -143,11 +173,17 @@ model Booking {
   stripeCheckoutSessionId String? @unique
   stripePaymentIntentId String? @unique
   paidAt DateTime?
-  status BookingStatus @default(PENDING)
+  status BookingStatus @default(REQUESTED)
+  cancellationReason String?
+  cancelledAt DateTime?
+  refundAmount Int @default(0)
+  stripeRefundId String? @unique
+  policyVersion String @default("2026-08-09")
   note String?
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   renter User @relation("RenterBookings", fields: [renterId], references: [id], onDelete: Cascade)
   messages Message[]
+  inspections TripInspection[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([listingId, startDate, endDate, status])
@@ -202,10 +238,84 @@ model VehicleVerification {
   vinLast4 String?
   registrationConfirmed Boolean @default(false)
   ownershipConfirmed Boolean @default(false)
+  currentPhotosConfirmed Boolean @default(false)
+  odometerOrHours Int?
+  plateLast4 String?
+  registrationDocumentRef String?
+  ownershipDocumentRef String?
+  documentProvider String?
   notes String?
   submittedAt DateTime @default(now())
   reviewedAt DateTime?
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model TripInspection {
+  id String @id @default(cuid())
+  type InspectionType
+  bookingId String
+  listingId String
+  odometerOrHours Int?
+  fuelOrBatteryLevel Int?
+  notes String?
+  damageDiagram Json @default("{}")
+  renterConfirmedAt DateTime?
+  ownerConfirmedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  photos InspectionPhoto[]
+  @@unique([bookingId, type])
+}
+
+model InspectionPhoto {
+  id String @id @default(cuid())
+  inspectionId String
+  url String
+  providerAssetId String?
+  capturedAt DateTime @default(now())
+  inspection TripInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+}
+
+model PolicyAcceptance {
+  id String @id @default(cuid())
+  userId String
+  policy String
+  version String
+  acceptedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, policy, version])
+}
+
+model EmailDelivery {
+  id String @id @default(cuid())
+  userId String?
+  toEmail String
+  template String
+  subject String
+  status String @default("QUEUED")
+  providerMessageId String?
+  attempts Int @default(0)
+  lastError String?
+  payload Json @default("{}")
+  createdAt DateTime @default(now())
+  sentAt DateTime?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([status, createdAt])
+}
+
+model AnalyticsEvent {
+  id String @id @default(cuid())
+  userId String?
+  sessionId String
+  name String
+  path String
+  metadata Json @default("{}")
+  createdAt DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([name, createdAt])
+  @@index([sessionId, createdAt])
 }
 model SavedSearch {
   id String @id @default(cuid())

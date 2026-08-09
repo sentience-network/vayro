@@ -18,7 +18,7 @@ export async function PATCH(
     if (status === "CANCELLED") {
       if (
         booking.renterId !== user.id ||
-        !["PENDING", "ACCEPTED"].includes(booking.status)
+        !["REQUESTED", "ACCEPTED", "PAYMENT_REQUIRED"].includes(booking.status)
       )
         throw new Error("FORBIDDEN");
       await db.booking.update({ where: { id }, data: { status } });
@@ -27,7 +27,7 @@ export async function PATCH(
     if (
       !["ACCEPTED", "DECLINED"].includes(status) ||
       booking.listing.ownerId !== user.id ||
-      booking.status !== "PENDING"
+      booking.status !== "REQUESTED"
     )
       throw new Error("FORBIDDEN");
     await db.$transaction(async (tx) => {
@@ -36,7 +36,7 @@ export async function PATCH(
           where: {
             id: { not: id },
             listingId: booking.listingId,
-            status: "ACCEPTED",
+            status: { in: ["ACCEPTED", "PAYMENT_REQUIRED", "PAID", "ACTIVE"] },
             startDate: { lt: booking.endDate },
             endDate: { gt: booking.startDate },
           },
@@ -46,14 +46,14 @@ export async function PATCH(
           where: {
             id: { not: id },
             listingId: booking.listingId,
-            status: "PENDING",
+            status: "REQUESTED",
             startDate: { lt: booking.endDate },
             endDate: { gt: booking.startDate },
           },
           data: { status: "DECLINED" },
         });
       }
-      await tx.booking.update({ where: { id }, data: { status } });
+      await tx.booking.update({ where: { id }, data: { status: status === "ACCEPTED" ? "PAYMENT_REQUIRED" : status } });
       await tx.notification.create({ data: { userId: booking.renterId, type: "BOOKING_STATUS", title: `Booking ${status.toLowerCase()}`, body: `${booking.listing.title} was ${status.toLowerCase()}.`, href: "/dashboard/trips" } });
     });
     return NextResponse.json({ ok: true });

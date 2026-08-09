@@ -23,7 +23,7 @@ export default async function ListingDetail({
       owner: true,
       reviews: { include: { author: true }, orderBy: { createdAt: "desc" } },
       bookings: {
-        where: { status: { in: ["PENDING", "ACCEPTED"] } },
+        where: { status: { in: ["REQUESTED", "ACCEPTED", "PAYMENT_REQUIRED", "PAID", "ACTIVE"] } },
         select: { startDate: true, endDate: true },
       },
     },

@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
       const bookingId = session.metadata?.bookingId;
       if (bookingId && session.payment_status === "paid") {
         await db.$transaction(async tx => {
-          const booking = await tx.booking.update({ where: { id: bookingId }, data: { paymentStatus: "PAID", stripePaymentIntentId: String(session.payment_intent), paidAt: new Date() }, include: { listing: true } });
+          const booking = await tx.booking.update({ where: { id: bookingId }, data: { status: "PAID", paymentStatus: "PAID", stripePaymentIntentId: String(session.payment_intent), paidAt: new Date() }, include: { listing: true } });
           await tx.notification.create({ data: { userId: booking.listing.ownerId, type: "BOOKING_PAID", title: "Booking paid", body: `${booking.listing.title} has been paid. Your payout is handled by Stripe.`, href: "/owner" } });
         });
       }
     }
     if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;
-      if (session.metadata?.bookingId) await db.booking.updateMany({ where: { id: session.metadata.bookingId, paymentStatus: "CHECKOUT_CREATED" }, data: { paymentStatus: "UNPAID" } });
+      if (session.metadata?.bookingId) await db.booking.updateMany({ where: { id: session.metadata.bookingId, paymentStatus: "CHECKOUT_CREATED" }, data: { status: "PAYMENT_FAILED", paymentStatus: "FAILED" } });
     }
     if (event.type === "account.updated") {
       const account = event.data.object as Stripe.Account;

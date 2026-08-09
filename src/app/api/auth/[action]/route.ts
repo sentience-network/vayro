@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { rateLimit } from "@/lib/rate-limit";
+import { deliverEmail } from "@/lib/email";
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ action: string }> },
@@ -41,6 +42,7 @@ export async function POST(
         },
       });
       await createSession(user.id);
+      await deliverEmail({ userId: user.id, to: user.email, template: "WELCOME", subject: "Welcome to Vayro", payload: { message: `Hi ${user.name}, finish identity verification before your first booking.` } });
       return NextResponse.json({ ok: true });
     }
     if (action === "login") {

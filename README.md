@@ -51,3 +51,11 @@ Passwords use bcrypt (cost 12); sessions are signed HTTP-only, same-site cookies
 - Identity vendor: `IDENTITY_PROVIDER_API_KEY`
 
 Never commit these secrets. Until they are configured, Vayro shows honest unavailable/pending states instead of fake success.
+
+## Production marketplace controls
+
+The current workflow uses the explicit lifecycle `REQUESTED → PAYMENT_REQUIRED → PAID → ACTIVE → COMPLETED`, plus cancellation, payment-failure, refund, and dispute states. Stripe webhooks—not browser redirects—confirm money movement. Hosted Stripe Identity keeps raw IDs and Social Security numbers out of Vayro's database.
+
+Owner-photo provenance, vehicle evidence references, check-in/out condition reports, email delivery records, and first-party funnel events are persisted in PostgreSQL. Cloudinary signed-upload support is available at `/api/uploads/sign`; configure its three environment variables before replacing temporary image URLs. Resend uses `RESEND_API_KEY` and `EMAIL_FROM`; without them, email events remain honestly queued.
+
+A paid persistent PostgreSQL plan, Stripe live-mode activation, a signed insurance/protection agreement, a maps/geocoding provider, and a tracker fulfillment partner remain external business launch dependencies rather than fake code switches.

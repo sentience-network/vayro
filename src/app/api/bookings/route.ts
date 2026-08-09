@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       const overlap = await tx.booking.findFirst({
         where: {
           listingId,
-          status: { in: ["PENDING", "ACCEPTED"] },
+          status: { in: ["REQUESTED", "ACCEPTED", "PAYMENT_REQUIRED", "PAID", "ACTIVE"] },
           startDate: { lt: endDate },
           endDate: { gt: startDate },
         },
