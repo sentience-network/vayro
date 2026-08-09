@@ -34,7 +34,7 @@ The included `render.yaml` provisions a Node web service and Render PostgreSQL d
 npm run db:seed
 ```
 
-Do not put seeding in the start command: the demo seed resets data. Build is `npm ci && npm run build`; start is `npm run db:deploy && npm run start`; health check is `/api/health`.
+Do not put seeding in the start command: the demo seed resets data. Build is `npm ci --include=dev && npm run build`; start is `npm run db:deploy && npm run start`; health check is `/api/health`. The explicit `--include=dev` keeps Tailwind/PostCSS available during Render's production compilation.
 
 For a custom domain, add the domain in the Render service's **Settings → Custom Domains** page and copy Render's DNS records to the domain registrar. Keep the generated `onrender.com` address enabled as a fallback.
 
