@@ -35,11 +35,13 @@ export function ApiButton({ url, body, label, method = "POST", className = "butt
   }}>{busy ? "Working…" : label}</button>;
 }
 
+export function RedirectButton({url,label,className="button"}:{url:string;label:string;className?:string}){const[busy,setBusy]=useState(false);return <button className={className} disabled={busy} onClick={async()=>{setBusy(true);try{const result=await jsonFetch(url,"POST");if(!result.url)throw new Error("Provider did not return a secure URL");window.location.assign(result.url)}catch(error){alert((error as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":label}</button>}
+
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter(); const [error, setError] = useState("");
   return <form className="stack" onSubmit={async event => {
     event.preventDefault(); setError(""); const form = new FormData(event.currentTarget);
-    if(mode==="register"&&form.get("password")!==form.get("confirmPassword")){setError("Passwords do not match");return} try { await jsonFetch(`/api/auth/${mode}`, "POST", { ...Object.fromEntries(form), isOwner: form.get("isOwner") === "on" }); router.push(mode === "login" ? "/browse" : "/"); router.refresh(); } catch (e) { setError((e as Error).message); }
+    if(mode==="register"&&form.get("password")!==form.get("confirmPassword")){setError("Passwords do not match");return} try { await jsonFetch(`/api/auth/${mode}`, "POST", { ...Object.fromEntries(form), isOwner: form.get("isOwner") === "on" }); router.push(mode === "login" ? "/browse" : "/verify-identity"); router.refresh(); } catch (e) { setError((e as Error).message); }
   }}>{mode === "register" && <><label>Name<input name="name" autoComplete="name" required minLength={2}/></label><label className="check"><input type="checkbox" name="isOwner"/> I plan to list vehicles</label></>}<label>Email<input name="email" type="email" autoComplete="email" required/></label><label>Password<input name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={8}/></label>{mode==="register"&&<label>Confirm password<input name="confirmPassword" type="password" autoComplete="new-password" required minLength={8}/></label>}{error && <p className="error" role="alert">{error}</p>}<button className="button">{mode === "login" ? "Log in" : "Create account"}</button></form>;
 }
 

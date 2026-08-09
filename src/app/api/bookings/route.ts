@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireUser(),
       parsed = bookingSchema.safeParse(await request.json());
+    if(user.identityVerificationStatus!=="VERIFIED")return NextResponse.json({error:"Complete identity verification before requesting a booking"},{status:403});
     if (!parsed.success)
       return NextResponse.json(
         { error: parsed.error.issues[0].message },

@@ -37,6 +37,13 @@ enum FeePayer {
   OWNER
   SPLIT
 }
+enum PaymentStatus {
+  UNPAID
+  CHECKOUT_CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
 
 model User {
   id String @id @default(cuid())
@@ -49,6 +56,12 @@ model User {
   subscriptionStatus SubscriptionStatus @default(FREE)
   stripeCustomerId String? @unique
   stripeSubscriptionId String? @unique
+  stripeConnectAccountId String? @unique
+  stripeChargesEnabled Boolean @default(false)
+  stripePayoutsEnabled Boolean @default(false)
+  identityVerificationSessionId String? @unique
+  identityVerificationStatus String @default("UNVERIFIED")
+  identityVerifiedAt DateTime?
   subscriptionEndsAt DateTime?
   subscriptionPlan String?
   airtagBenefitStatus String @default("NOT_AVAILABLE")
@@ -126,6 +139,10 @@ model Booking {
   renterFee Int @default(0)
   ownerFee Int @default(0)
   ownerPayout Int @default(0)
+  paymentStatus PaymentStatus @default(UNPAID)
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId String? @unique
+  paidAt DateTime?
   status BookingStatus @default(PENDING)
   note String?
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
