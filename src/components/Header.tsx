@@ -9,6 +9,7 @@ export async function Header() {
   const links = [
     { href: "/browse", label: "Explore" },
     { href: "/pricing", label: "Plus" },
+    { href: "/perks", label: "Perks" },
     { href: "/safety", label: "Safety" },
     ...(user ? [
       { href: "/saved-searches", label: "Saved" },

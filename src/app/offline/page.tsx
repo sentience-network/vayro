@@ -1,0 +1,1 @@
+import Link from"next/link";export default function Offline(){return <section className="auth"><div className="panel"><span className="eyebrow">OFFLINE</span><h1>The road continues.</h1><p>Vayro cannot reach the network right now. Your signed-in and payment data is never stored in the offline cache.</p><Link className="button" href="/">Try again</Link></div></section>}
