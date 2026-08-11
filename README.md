@@ -59,3 +59,9 @@ The current workflow uses the explicit lifecycle `REQUESTED → PAYMENT_REQUIRED
 Owner-photo provenance, vehicle evidence references, check-in/out condition reports, email delivery records, and first-party funnel events are persisted in PostgreSQL. Cloudinary signed-upload support is available at `/api/uploads/sign`; configure its three environment variables before replacing temporary image URLs. Resend uses `RESEND_API_KEY` and `EMAIL_FROM`; without them, email events remain honestly queued.
 
 A paid persistent PostgreSQL plan, Stripe live-mode activation, a signed insurance/protection agreement, a maps/geocoding provider, and a tracker fulfillment partner remain external business launch dependencies rather than fake code switches.
+
+## Trusted vehicle catalog
+
+Vayro keeps reference vehicles separate from rentable listings. `npm run catalog:sync` imports authoritative make/model records from the U.S. Department of Transportation's NHTSA vPIC API, preserving source IDs, URLs, and synchronization history. Owners can choose catalog values or use the manual fallback for custom, antique, marine, or otherwise missing vehicles. A catalog record never creates a public listing.
+
+The authenticated VIN endpoint uses NHTSA vPIC and is rate-limited. Boat manufacturer/HIN coverage is designed for a separate USCG source adapter because the Coast Guard publishes manufacturer codes rather than a comprehensive boat-model catalog. Run large catalog synchronization as an administrative job rather than during application startup.

@@ -58,6 +58,12 @@ enum InspectionType {
   CHECK_IN
   CHECK_OUT
 }
+enum CatalogSource {
+  NHTSA
+  USCG
+  MANUFACTURER
+  MANUAL
+}
 
 model User {
   id String @id @default(cuid())
@@ -122,7 +128,9 @@ model Listing {
   longitude Decimal? @db.Decimal(9, 6)
   feePayer FeePayer @default(RENTER)
   ownerId String
+  catalogModelId String?
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  catalogModel VehicleCatalogModel? @relation(fields: [catalogModelId], references: [id], onDelete: SetNull)
   photos Photo[]
   bookings Booking[]
   favorites Favorite[]
@@ -133,6 +141,60 @@ model Listing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([category, location, status])
+  @@index([catalogModelId])
+}
+
+model VehicleCatalogMake {
+  id String @id @default(cuid())
+  source CatalogSource
+  sourceId String
+  name String
+  normalizedName String
+  vehicleTypes String[]
+  country String?
+  active Boolean @default(true)
+  sourceUrl String
+  lastSyncedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  models VehicleCatalogModel[]
+  @@unique([source, sourceId])
+  @@index([normalizedName])
+  @@index([source, active])
+}
+
+model VehicleCatalogModel {
+  id String @id @default(cuid())
+  source CatalogSource
+  sourceId String
+  makeId String
+  name String
+  normalizedName String
+  vehicleTypes String[]
+  firstYear Int?
+  lastYear Int?
+  active Boolean @default(true)
+  sourceUrl String
+  lastSyncedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  make VehicleCatalogMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+  listings Listing[]
+  @@unique([source, sourceId])
+  @@index([makeId, normalizedName])
+  @@index([source, active])
+}
+
+model VehicleCatalogSync {
+  id String @id @default(cuid())
+  source CatalogSource
+  status String @default("RUNNING")
+  makesProcessed Int @default(0)
+  modelsProcessed Int @default(0)
+  error String?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+  @@index([source, startedAt])
 }
 
 model Photo {
