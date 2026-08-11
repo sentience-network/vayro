@@ -1,0 +1,1 @@
+export function TireRating({rating,label=true}:{rating:number;label?:boolean}){const rounded=Math.max(0,Math.min(5,Math.round(rating)));return <span className="tirerating" role="img" aria-label={`${rating.toFixed(1)} out of 5 tires`}>{Array.from({length:5},(_,i)=><i className={i<rounded?"filled":""} key={i} aria-hidden="true">●</i>)}{label&&<b>{rating.toFixed(1)}</b>}</span>}

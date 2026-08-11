@@ -12,6 +12,7 @@ import {
 } from "@/components/ClientActions";
 import type { Metadata } from "next";
 import { OwnerLink } from "@/components/MarketplaceEnhancements";
+import { TireRating } from "@/components/TireRating";
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,category:true,details:true,photos:{take:1,select:{url:true}}}});if(!listing)return{title:"Listing not found"};const details=listing.details as Record<string,string>,photo=isRepresentative(details)?vehiclePhotoPlaceholder(listing.category,details):listing.photos[0]?.url;return{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:photo?[photo]:[]}};}
 export default async function ListingDetail({
@@ -45,7 +46,8 @@ export default async function ListingDetail({
           where: {
             listingId: listing.id,
             renterId: user.id,
-            status: { in: ["ACCEPTED", "COMPLETED"] },
+            status: "COMPLETED",
+            endDate: { lte: new Date() },
           },
           select: { id: true },
         }))
@@ -89,7 +91,7 @@ export default async function ListingDetail({
           <div className="spread">
             <span className="pill">{listing.category}</span>
             <span>
-              ★ {rating} · {listing.reviews.length} reviews
+              {rating==="New"?<span className="muted">Not yet rated</span>:<><TireRating rating={Number(rating)}/> · {listing.reviews.length} verified {listing.reviews.length===1?"review":"reviews"}</>}
             </span>
           </div>
           <div className="titleline">
@@ -144,19 +146,20 @@ export default async function ListingDetail({
               : "No blocked dates"}
           </p>
           <p className="notice"><b>Know before you book:</b> You will not be charged until the owner accepts. Review the vehicle, trip dates, fee breakdown, and cancellation terms before secure checkout.</p>
-          <h2>Guest reviews</h2>
-          {mayReview && <ReviewForm listingId={listing.id} />}
+          <h2>Verified renter ratings and comments</h2>
+          <p className="muted">Only renters who completed a trip can post here. Questions and pre-trip communication stay private in Messages.</p>
+          {mayReview ? <ReviewForm listingId={listing.id} /> : user?.id!==listing.ownerId ? <Link className="outline" href={user?`/messages?with=${listing.ownerId}`:"/login"}>{user?"Message the owner privately":"Log in to message the owner"}</Link> : null}
           <div className="reviews">
             {listing.reviews.map((review) => (
               <blockquote key={review.id}>
-                <b>{"★".repeat(review.rating)}</b>
+                <TireRating rating={review.rating}/>
                 <p>“{review.comment}”</p>
-                <small>— {review.author.name}</small>
+                <small>— {review.author.name} · Verified completed rental</small>
               </blockquote>
             ))}
             {!listing.reviews.length && (
               <p className="muted">
-                Be the first confirmed renter to leave a review.
+                No verified renter comments yet.
               </p>
             )}
           </div>
