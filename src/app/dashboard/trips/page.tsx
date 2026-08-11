@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ApiButton, RedirectButton } from "@/components/ClientActions";
+import { BookingTimeline } from "@/components/MarketplaceEnhancements";
 
 export default async function Trips({ searchParams }: { searchParams: Promise<{ booked?: string; payment?: string }> }) {
   const user = await getUser(); if (!user) redirect("/login"); const query = await searchParams;
@@ -13,7 +14,7 @@ export default async function Trips({ searchParams }: { searchParams: Promise<{ 
   return <section className="section page"><span className="eyebrow">RENTER DASHBOARD</span><h1>My trips</h1>
     {query.booked && <div className="success">Your request was sent. The owner will review it soon.</div>}
     {query.payment === "success" && <div className="success">Payment received. Your trip is confirmed when the signed Stripe webhook marks it paid.</div>}
-    <div className="rows">{trips.map(trip => <div className="row" key={trip.id}><img src={trip.listing.photos[0]?.url} alt=""/><div className="grow"><span className={`status ${trip.status.toLowerCase()}`}>{trip.status.replaceAll("_", " ")}</span> <span className="pill">{trip.paymentStatus}</span><h3>{trip.listing.title}</h3><p>{trip.startDate.toLocaleDateString()} — {trip.endDate.toLocaleDateString()} · ${trip.totalPrice}</p><div className="actions">
+    <div className="rows">{trips.map(trip => <div className="row triprow" key={trip.id}><img src={trip.listing.photos[0]?.url} alt=""/><div className="grow"><span className={`status ${trip.status.toLowerCase()}`}>{trip.status.replaceAll("_", " ")}</span> <span className="pill">{trip.paymentStatus}</span><h3>{trip.listing.title}</h3><p>{trip.startDate.toLocaleDateString()} — {trip.endDate.toLocaleDateString()} · ${trip.totalPrice}</p><BookingTimeline status={trip.status}/><div className="actions">
       {["ACCEPTED", "PAYMENT_REQUIRED", "PAYMENT_FAILED"].includes(trip.status) && trip.paymentStatus !== "PAID" && <RedirectButton url={`/api/bookings/${trip.id}/checkout`} label="Pay securely with Stripe"/>}
       {["PAID", "ACTIVE"].includes(trip.status) && <Link className="outline" href={`/dashboard/trips/${trip.id}/inspection`}>{trip.inspections.length ? "Update trip report" : "Start check-in"}</Link>}
       <Link href={`/messages?with=${trip.listing.ownerId}`}>Message {trip.listing.owner.name} →</Link>

@@ -11,6 +11,7 @@ import {
   ListingViewTracker,
 } from "@/components/ClientActions";
 import type { Metadata } from "next";
+import { OwnerLink } from "@/components/MarketplaceEnhancements";
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,category:true,details:true,photos:{take:1,select:{url:true}}}});if(!listing)return{title:"Listing not found"};const details=listing.details as Record<string,string>,photo=isRepresentative(details)?vehiclePhotoPlaceholder(listing.category,details):listing.photos[0]?.url;return{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:photo?[photo]:[]}};}
 export default async function ListingDetail({
@@ -97,7 +98,7 @@ export default async function ListingDetail({
           </div>
           <p>{listing.location}</p>
           <hr />
-          <h3>Hosted by {listing.owner.name}</h3>
+          <h3>Hosted by <OwnerLink id={listing.owner.id} name={listing.owner.name}/></h3>
           <p>{listing.owner.bio || "Local owner and adventure enthusiast."}</p>
           <div className="hostsignals"><span>✓ Identity workflow</span><span>✓ {ownerListingCount} active {ownerListingCount===1?"listing":"listings"}</span><span>✓ Secure in-app messages</span></div>
           <hr />
@@ -130,6 +131,7 @@ export default async function ListingDetail({
           <p>
             <b>Security deposit:</b> ${listing.securityDeposit}
           </p>
+          {(details.weeklyDiscount||details.monthlyDiscount)&&<div className="discountcallout"><b>Longer-trip savings</b>{details.weeklyDiscount&&<span>{details.weeklyDiscount}% off weekly rentals</span>}{details.monthlyDiscount&&<span>{details.monthlyDiscount}% off monthly rentals</span>}</div>}
           <h3>Unavailable dates</h3>
           <p className="availability">
             {listing.bookings.length

@@ -40,6 +40,13 @@ export default async function Browse({
       q.category
         ? { category: { equals: q.category, mode: "insensitive" } }
         : {},
+      q.make ? { details: { path: ["make"], string_contains: q.make } } : {},
+      q.model ? { details: { path: ["model"], string_contains: q.model } } : {},
+      q.year ? { details: { path: ["year"], equals: q.year } } : {},
+      q.seats ? { details: { path: ["seats"], equals: q.seats } } : {},
+      q.transmission ? { details: { path: ["transmission"], equals: q.transmission } } : {},
+      q.fuelType ? { details: { path: ["fuelType"], string_contains: q.fuelType } } : {},
+      q.instantBook === "true" ? { instantBook: true } : {},
       q.delivery ? { deliveryOptions: { has: q.delivery } } : {},
       validDates
         ? {
@@ -127,6 +134,12 @@ export default async function Browse({
             <option key={x}>{x}</option>
           ))}
         </select>
+        <input name="make" aria-label="Vehicle make" placeholder="Make" defaultValue={q.make}/>
+        <input name="model" aria-label="Vehicle model" placeholder="Model" defaultValue={q.model}/>
+        <input name="year" aria-label="Vehicle year" inputMode="numeric" placeholder="Year" defaultValue={q.year}/>
+        <input name="seats" aria-label="Minimum seats" type="number" min="1" max="30" placeholder="Seats" defaultValue={q.seats}/>
+        <select name="transmission" aria-label="Transmission" defaultValue={q.transmission||""}><option value="">Any transmission</option><option>Automatic</option><option>Manual</option></select>
+        <input name="fuelType" aria-label="Fuel or power type" placeholder="Gas, electric…" defaultValue={q.fuelType}/>
         <input
           name="min"
           aria-label="Minimum price"
@@ -165,6 +178,7 @@ export default async function Browse({
           <option value="Local delivery">Local delivery</option>
           <option value="Airport delivery">Airport delivery</option>
         </select>
+        <label className="instantcheck"><input name="instantBook" type="checkbox" value="true" defaultChecked={q.instantBook==="true"}/> Instant booking</label>
         <select
           name="sort"
           aria-label="Sort results"

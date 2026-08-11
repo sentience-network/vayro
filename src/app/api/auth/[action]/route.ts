@@ -57,6 +57,7 @@ export async function POST(
           { status: 401 },
         );
       await createSession(user.id);
+      await deliverEmail({userId:user.id,to:user.email,template:"LOGIN_ALERT",subject:"New Vayro login",payload:{message:`A login to your Vayro account was recorded from ${client}. If this was not you, contact support immediately.`}});
       return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ error: "Not found" }, { status: 404 });

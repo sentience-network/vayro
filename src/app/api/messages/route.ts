@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { z } from "zod";
+import { rateLimit } from "@/lib/rate-limit";
 const schema = z.object({
   recipientId: z.string().min(1),
   bookingId: z.string().optional(),
@@ -11,6 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireUser(),
       parsed = schema.safeParse(await request.json());
+    if (!rateLimit(`message:${user.id}`, 20, 60_000)) return NextResponse.json({error:"You are sending messages too quickly. Try again in a minute."},{status:429});
     if (!parsed.success)
       return NextResponse.json(
         { error: "Write a message under 2,000 characters" },
