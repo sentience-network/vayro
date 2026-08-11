@@ -1,1 +1,31 @@
-import Link from"next/link";import{getUser}from"@/lib/auth";import{db}from"@/lib/db";import{ApiButton}from"./ClientActions";export async function Header(){const user=await getUser(),unread=user?await db.notification.count({where:{userId:user.id,readAt:null}}):0;return <header><Link href="/" className="logo">Vayro<span>↗</span></Link><nav><Link href="/browse">Explore</Link><Link href="/pricing">Plus</Link><Link href="/safety">Safety</Link>{user&&<><Link href="/saved-searches">Saved</Link><Link href="/dashboard/trips">Trips</Link><Link href="/messages">Messages</Link><Link href="/notifications">Alerts{unread>0&&<b className="count">{unread}</b>}</Link>{user.isOwner&&<><Link href="/owner">Owner</Link><Link href="/owner/tools">Tools</Link></>}{user.role==="ADMIN"&&<Link href="/admin">Admin</Link>}<Link href="/support">Support</Link></>}{user?<ApiButton url="/api/auth/logout" label="Log out" className="quiet"/>:<><Link href="/login">Log in</Link><Link href="/register" className="button small">Join Vayro</Link></>}</nav></header>}
+import Link from "next/link";
+import { getUser } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { MobileNav, ApiButton } from "./ClientActions";
+
+export async function Header() {
+  const user = await getUser();
+  const unread = user ? await db.notification.count({ where: { userId: user.id, readAt: null } }) : 0;
+  const links = [
+    { href: "/browse", label: "Explore" },
+    { href: "/pricing", label: "Plus" },
+    { href: "/safety", label: "Safety" },
+    ...(user ? [
+      { href: "/saved-searches", label: "Saved" },
+      { href: "/dashboard/trips", label: "Trips" },
+      { href: "/messages", label: "Messages" },
+      { href: "/notifications", label: `Alerts${unread ? ` (${unread})` : ""}` },
+      ...(user.isOwner ? [{ href: "/owner", label: "Owner" }, { href: "/owner/tools", label: "Tools" }] : []),
+      ...(user.role === "ADMIN" ? [{ href: "/admin", label: "Admin" }] : []),
+      { href: "/support", label: "Support" },
+    ] : []),
+  ];
+  return <header>
+    <Link href="/" className="logo" aria-label="Vayro home">Vayro<span>↗</span></Link>
+    <nav className="desktopnav" aria-label="Primary navigation">
+      {links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}
+      {user ? <ApiButton url="/api/auth/logout" label="Log out" className="quiet" /> : <><Link href="/login">Log in</Link><Link href="/register" className="button small">Join Vayro</Link></>}
+    </nav>
+    <MobileNav links={links} loggedIn={!!user} />
+  </header>;
+}

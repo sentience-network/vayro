@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
 async function jsonFetch(url: string, method: string, body?: object) {
   const response = await fetch(url, {
@@ -33,6 +34,37 @@ export function ApiButton({ url, body, label, method = "POST", className = "butt
     setBusy(true);
     try { await jsonFetch(url, method, body); router.refresh(); } catch (error) { alert((error as Error).message); } finally { setBusy(false); }
   }}>{busy ? "Working…" : label}</button>;
+}
+
+export function MobileNav({ links, loggedIn }: { links: { href: string; label: string }[]; loggedIn: boolean }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
+  return <div className="mobilenav">
+    <button className="menubutton" aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? "×" : "☰"}</button>
+    {open && <div className="menubackdrop" onClick={() => setOpen(false)}><nav id="mobile-menu" aria-label="Mobile navigation" onClick={event => event.stopPropagation()}>
+      <div className="spread"><b>Menu</b><button className="quiet" onClick={() => setOpen(false)}>Close ×</button></div>
+      {links.map(link => <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>)}
+      {loggedIn ? <ApiButton url="/api/auth/logout" label="Log out" className="outline" /> : <><Link href="/login" onClick={() => setOpen(false)}>Log in</Link><Link href="/register" className="button" onClick={() => setOpen(false)}>Join Vayro</Link></>}
+    </nav></div>}
+  </div>;
+}
+
+type RecentRide = { slug: string; title: string; location: string; price: number; photo: string };
+export function ListingViewTracker({ ride }: { ride: RecentRide }) {
+  useEffect(() => {
+    try {
+      const old = JSON.parse(localStorage.getItem("vayro-recent") || "[]") as RecentRide[];
+      localStorage.setItem("vayro-recent", JSON.stringify([ride, ...old.filter(x => x.slug !== ride.slug)].slice(0, 4)));
+    } catch { /* private browsing can disable storage */ }
+  }, [ride]);
+  return null;
+}
+
+export function RecentlyViewed() {
+  const [rides, setRides] = useState<RecentRide[]>([]);
+  useEffect(() => { try { setRides(JSON.parse(localStorage.getItem("vayro-recent") || "[]")); } catch { /* no storage */ } }, []);
+  if (!rides.length) return null;
+  return <section className="recent"><div className="sectionhead"><div><span className="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Recently viewed</h2></div></div><div className="recentgrid">{rides.map(ride => <Link href={`/listings/${ride.slug}`} key={ride.slug}><img src={ride.photo} alt="" loading="lazy"/><div><b>{ride.title}</b><small>{ride.location} · ${ride.price}/day</small></div></Link>)}</div></section>;
 }
 
 export function RedirectButton({url,label,className="button"}:{url:string;label:string;className?:string}){const[busy,setBusy]=useState(false);return <button className={className} disabled={busy} onClick={async()=>{setBusy(true);try{const result=await jsonFetch(url,"POST");if(!result.url)throw new Error("Provider did not return a secure URL");window.location.assign(result.url)}catch(error){alert((error as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":label}</button>}

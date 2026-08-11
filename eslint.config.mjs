@@ -11,6 +11,11 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    // Listing images can be owner-supplied data URLs or arbitrary HTTPS URLs,
+    // so Next Image's compile-time host allowlist is intentionally unsuitable.
+    rules: { "@next/next/no-img-element": "off" },
+  },
 ];
 
 export default eslintConfig;

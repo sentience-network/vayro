@@ -18,6 +18,8 @@ export default async function Browse({
   const start =
       q.start && /^\d{4}-\d{2}-\d{2}$/.test(q.start) ? new Date(q.start) : null,
     end = q.end && /^\d{4}-\d{2}-\d{2}$/.test(q.end) ? new Date(q.end) : null;
+  const validDates = !!(start && end && end > start);
+  const days = validDates ? Math.ceil((end!.getTime() - start!.getTime()) / 86400000) : 0;
   const keyword = q.q?.trim();
   const savedQuery = Object.fromEntries(Object.entries(q).filter(([key,value]) => key !== "page" && Boolean(value)));
   const where: Prisma.ListingWhereInput = {
@@ -38,7 +40,8 @@ export default async function Browse({
       q.category
         ? { category: { equals: q.category, mode: "insensitive" } }
         : {},
-      start && end && end > start
+      q.delivery ? { deliveryOptions: { has: q.delivery } } : {},
+      validDates
         ? {
             bookings: {
               none: {
@@ -84,6 +87,9 @@ export default async function Browse({
     <section className="section page">
       <span className="eyebrow">FIND YOUR WAY OUT</span>
       <h1>Explore the fleet</h1>
+      <div className="quickfilters" aria-label="Popular categories">
+        {["Car", "SUV", "RV", "Boat", "Motorcycle", "Travel trailer"].map(category => <Link className={q.category === category ? "active" : ""} key={category} href={`/browse?${new URLSearchParams({...q,category,page:"1"})}`}>{category}</Link>)}
+      </div>
       <form className="filters improved">
         <input
           name="q"
@@ -150,6 +156,16 @@ export default async function Browse({
           defaultValue={q.end}
         />
         <select
+          name="delivery"
+          aria-label="Delivery option"
+          defaultValue={q.delivery || ""}
+        >
+          <option value="">Any pickup or delivery</option>
+          <option value="Owner pickup">Owner pickup</option>
+          <option value="Local delivery">Local delivery</option>
+          <option value="Airport delivery">Airport delivery</option>
+        </select>
+        <select
           name="sort"
           aria-label="Sort results"
           defaultValue={q.sort || "newest"}
@@ -161,9 +177,11 @@ export default async function Browse({
         </select>
         <button className="button">Search</button>
       </form>
+      {start && end && !validDates && <p className="error" role="alert">The end date must be after the start date.</p>}
+      <div className="pricechips" aria-label="Quick price filters"><span>Daily budget:</span>{[[0,100],[100,200],[200,400]].map(([low,high])=><Link key={low} href={`/browse?${new URLSearchParams({...q,min:String(low),max:String(high),page:"1"})}`}>${low}–${high}</Link>)}</div>
       <div className="resultsbar">
         <p>
-          {count} {count === 1 ? "ride" : "rides"} found
+          <span aria-live="polite">{count} {count === 1 ? "ride" : "rides"} found{validDates ? ` for ${days} ${days === 1 ? "day" : "days"}` : ""}</span>
         </p>
         <div className="actions">{user && Object.keys(savedQuery).length > 0 && <SaveSearchButton query={savedQuery}/>} {Object.keys(q).length > 0 && <Link href="/browse">Clear filters ×</Link>}</div>
       </div>
@@ -176,6 +194,7 @@ export default async function Browse({
                 key={l.id}
                 canFav={!!user}
                 isFavorite={favoriteIds.has(l.id)}
+                days={days}
               />
             ))}
           </div>

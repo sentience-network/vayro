@@ -8,7 +8,11 @@ import {
   ApiButton,
   ReviewForm,
   ShareButton,
+  ListingViewTracker,
 } from "@/components/ClientActions";
+import type { Metadata } from "next";
+
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,photos:{take:1,select:{url:true}}}});return listing?{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:listing.photos[0]?.url?[listing.photos[0].url]:[]}}:{title:"Listing not found"};}
 export default async function ListingDetail({
   params,
 }: {
@@ -47,8 +51,12 @@ export default async function ListingDetail({
       : false,
     representative = isRepresentative(listing.details),
     details = listing.details as Record<string, string>;
+  const ownerListingCount = await db.listing.count({where:{ownerId:listing.ownerId,status:"ACTIVE"}});
+  const structuredData = {"@context":"https://schema.org","@type":"Product",name:listing.title,description:listing.description,image:listing.photos.map(photo=>photo.url),offers:{"@type":"Offer",price:listing.pricePerDay,priceCurrency:"USD",availability:"https://schema.org/InStock",url:`${process.env.NEXT_PUBLIC_APP_URL||"https://vayro.onrender.com"}/listings/${listing.slug}`},aggregateRating:listing.reviews.length?{"@type":"AggregateRating",ratingValue:rating,reviewCount:listing.reviews.length}:undefined};
   return (
     <section className="section page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(structuredData).replace(/</g,"\\u003c")}} />
+      <ListingViewTracker ride={{slug:listing.slug,title:listing.title,location:listing.location,price:listing.pricePerDay,photo:listing.photos[0]?.url||"/placeholder.svg"}} />
       <nav className="breadcrumbs" aria-label="Breadcrumb">
         <Link href="/browse">Explore</Link>
         <span>›</span>
@@ -90,6 +98,7 @@ export default async function ListingDetail({
           <hr />
           <h3>Hosted by {listing.owner.name}</h3>
           <p>{listing.owner.bio || "Local owner and adventure enthusiast."}</p>
+          <div className="hostsignals"><span>✓ Identity workflow</span><span>✓ {ownerListingCount} active {ownerListingCount===1?"listing":"listings"}</span><span>✓ Secure in-app messages</span></div>
           <hr />
           <h2>About this ride</h2>
           <p className="prose">{listing.description}</p>
@@ -121,7 +130,7 @@ export default async function ListingDetail({
             <b>Security deposit:</b> ${listing.securityDeposit}
           </p>
           <h3>Unavailable dates</h3>
-          <p>
+          <p className="availability">
             {listing.bookings.length
               ? listing.bookings
                   .map(
@@ -131,6 +140,7 @@ export default async function ListingDetail({
                   .join(", ")
               : "No blocked dates"}
           </p>
+          <p className="notice"><b>Know before you book:</b> You will not be charged until the owner accepts. Review the vehicle, trip dates, fee breakdown, and cancellation terms before secure checkout.</p>
           <h2>Guest reviews</h2>
           {mayReview && <ReviewForm listingId={listing.id} />}
           <div className="reviews">
@@ -168,6 +178,7 @@ export default async function ListingDetail({
                 label="♡ Save to favorites"
                 className="outline"
               />
+              <div className="bookingtrust"><span>🔒 Payment handled by Stripe</span><span>✓ No charge for requesting</span><span>💬 Message the owner anytime</span></div>
             </>
           ) : (
             <p>
@@ -176,6 +187,7 @@ export default async function ListingDetail({
               </a>
             </p>
           )}
+          <Link className="reportlink" href={`/support?subject=${encodeURIComponent(`Listing concern: ${listing.title}`)}`}>Report this listing or ask for help</Link>
         </aside>
       </div>
     </section>
