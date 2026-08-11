@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { isRepresentative } from "@/lib/listing-images";
+import { isRepresentative, vehiclePhotoPlaceholder } from "@/lib/listing-images";
 import {
   BookingForm,
   ApiButton,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ClientActions";
 import type { Metadata } from "next";
 
-export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,photos:{take:1,select:{url:true}}}});return listing?{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:listing.photos[0]?.url?[listing.photos[0].url]:[]}}:{title:"Listing not found"};}
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,category:true,details:true,photos:{take:1,select:{url:true}}}});if(!listing)return{title:"Listing not found"};const details=listing.details as Record<string,string>,photo=isRepresentative(details)?vehiclePhotoPlaceholder(listing.category,details):listing.photos[0]?.url;return{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:photo?[photo]:[]}};}
 export default async function ListingDetail({
   params,
 }: {
@@ -52,11 +52,12 @@ export default async function ListingDetail({
     representative = isRepresentative(listing.details),
     details = listing.details as Record<string, string>;
   const ownerListingCount = await db.listing.count({where:{ownerId:listing.ownerId,status:"ACTIVE"}});
-  const structuredData = {"@context":"https://schema.org","@type":"Product",name:listing.title,description:listing.description,image:listing.photos.map(photo=>photo.url),offers:{"@type":"Offer",price:listing.pricePerDay,priceCurrency:"USD",availability:"https://schema.org/InStock",url:`${process.env.NEXT_PUBLIC_APP_URL||"https://vayro.onrender.com"}/listings/${listing.slug}`},aggregateRating:listing.reviews.length?{"@type":"AggregateRating",ratingValue:rating,reviewCount:listing.reviews.length}:undefined};
+  const displayPhoto = representative ? vehiclePhotoPlaceholder(listing.category, details) : listing.photos[0]?.url || vehiclePhotoPlaceholder(listing.category, details);
+  const structuredData = {"@context":"https://schema.org","@type":"Product",name:listing.title,description:listing.description,image:representative?[displayPhoto]:listing.photos.map(photo=>photo.url),offers:{"@type":"Offer",price:listing.pricePerDay,priceCurrency:"USD",availability:"https://schema.org/InStock",url:`${process.env.NEXT_PUBLIC_APP_URL||"https://vayro.onrender.com"}/listings/${listing.slug}`},aggregateRating:listing.reviews.length?{"@type":"AggregateRating",ratingValue:rating,reviewCount:listing.reviews.length}:undefined};
   return (
     <section className="section page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(structuredData).replace(/</g,"\\u003c")}} />
-      <ListingViewTracker ride={{slug:listing.slug,title:listing.title,location:listing.location,price:listing.pricePerDay,photo:listing.photos[0]?.url||"/placeholder.svg"}} />
+      <ListingViewTracker ride={{slug:listing.slug,title:listing.title,location:listing.location,price:listing.pricePerDay,photo:displayPhoto}} />
       <nav className="breadcrumbs" aria-label="Breadcrumb">
         <Link href="/browse">Explore</Link>
         <span>›</span>
@@ -68,8 +69,8 @@ export default async function ListingDetail({
       </nav>
       {representative && (
         <div className="photo-disclaimer">
-          <b>Representative image:</b> supplied by Vayro because the owner did
-          not upload photos. This is not the actual vehicle.
+          <b>Vehicle photo needed:</b> the owner has not uploaded a photo. The
+          graphic below identifies the listed make and model but is not a photo of the vehicle.
         </div>
       )}
       <div className="gallery">
@@ -77,7 +78,7 @@ export default async function ListingDetail({
           <img
             key={photo.id}
             className={index === 0 ? "primary" : ""}
-            src={photo.url}
+            src={representative ? vehiclePhotoPlaceholder(listing.category, details) : photo.url}
             alt={photo.alt || `${listing.title} photo ${index + 1}`}
           />
         ))}

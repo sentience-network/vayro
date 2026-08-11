@@ -1,3 +1,22 @@
-const defaults: Record<string,string>={Car:"https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=80",Truck:"https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&fit=crop&w=1400&q=80",SUV:"https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1400&q=80",Luxury:"https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1400&q=80",RV:"https://www.winnebago.com/Admin/Public/GetImage.ashx?Crop=1&DoNotUpscale=True&FillCanvas=False&Format=WebP&Height=900&Image=%2FFiles%2FImages%2FWinnebagoLife%2Fwinnebago-Solis-off-road.jpg&Quality=85","Camper van":"https://www.winnebago.com/Admin/Public/GetImage.ashx?Crop=1&DoNotUpscale=True&FillCanvas=False&Format=WebP&Height=900&Image=%2FFiles%2FImages%2FWinnebagoLife%2Fwinnebago-Solis-off-road.jpg&Quality=85","Travel trailer":"https://images.unsplash.com/photo-1619317190381-643a6b28d6e6?auto=format&fit=crop&w=1400&q=80",Boat:"https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=1400&q=80","Jet ski":"https://images.unsplash.com/photo-1524061508355-90afbf7fcf03?auto=format&fit=crop&w=1400&q=80",Motorcycle:"https://images.unsplash.com/photo-1654136682764-53e08ef6ac95?auto=format&fit=crop&w=1400&q=80",ATV:"https://images.unsplash.com/photo-1517962140171-2dfc01caecb7?auto=format&fit=crop&w=1400&q=80",UTV:"https://images.unsplash.com/photo-1517962140171-2dfc01caecb7?auto=format&fit=crop&w=1400&q=80",Other:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80"};
-export function resolveListingPhotos(category:string,photoUrls:string[],details:Record<string,string>){if(photoUrls.length)return{photoUrls,details:{...details,_photoSource:"OWNER"}};return{photoUrls:[defaults[category]||defaults.Other],details:{...details,_photoSource:"VAYRO_REPRESENTATIVE"}}}
-export function isRepresentative(details:unknown){return !!details&&typeof details==="object"&&(details as Record<string,unknown>)._photoSource==="VAYRO_REPRESENTATIVE"}
+function escapeXml(value: string) {
+  return value.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[character]!);
+}
+
+export function vehiclePhotoPlaceholder(category: string, details: Record<string, string> = {}) {
+  const identity = [details.year, details.make, details.model].map(value => value?.trim()).filter(Boolean).join(" ") || category;
+  const safeIdentity = escapeXml(identity.slice(0, 60));
+  const safeCategory = escapeXml(category.slice(0, 30));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900"><rect width="1400" height="900" fill="#123c2b"/><circle cx="1180" cy="130" r="280" fill="#d8e66a" opacity=".12"/><circle cx="170" cy="780" r="330" fill="#f4f0e6" opacity=".06"/><g fill="none" stroke="#d8e66a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".9"><path d="M360 505h680l-80-155c-25-48-62-72-112-72H572c-45 0-80 22-107 65l-105 162Z"/><path d="M330 505h740v135H330z"/><circle cx="485" cy="650" r="73" fill="#123c2b"/><circle cx="915" cy="650" r="73" fill="#123c2b"/></g><text x="700" y="155" text-anchor="middle" fill="#f4f0e6" font-family="Arial, sans-serif" font-size="34" letter-spacing="8">VEHICLE PHOTO NEEDED</text><text x="700" y="770" text-anchor="middle" fill="#fff" font-family="Georgia, serif" font-size="58">${safeIdentity}</text><text x="700" y="830" text-anchor="middle" fill="#d8e66a" font-family="Arial, sans-serif" font-size="24" letter-spacing="5">${safeCategory.toUpperCase()} · NOT A PHOTO OF THE VEHICLE</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+export function resolveListingPhotos(category: string, photoUrls: string[], details: Record<string, string>) {
+  if (photoUrls.length) return { photoUrls, details: { ...details, _photoSource: "OWNER" } };
+  return { photoUrls: [vehiclePhotoPlaceholder(category, details)], details: { ...details, _photoSource: "VAYRO_PLACEHOLDER" } };
+}
+
+export function isRepresentative(details: unknown) {
+  if (!details || typeof details !== "object") return false;
+  const source = (details as Record<string, unknown>)._photoSource;
+  return source === "VAYRO_REPRESENTATIVE" || source === "VAYRO_PLACEHOLDER";
+}
