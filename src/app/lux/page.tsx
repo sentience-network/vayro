@@ -1,10 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { ListingCard } from "@/components/ListingCard";
 import { luxuryMinimumDeposit } from "@/lib/marketplace";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Vayro Lux",
   description: "Premium yachts, exotic cars, luxury SUVs, and elevated adventure vehicles.",
 };

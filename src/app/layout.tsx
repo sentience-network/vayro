@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://vayro.onrender.com"),
   manifest: "/manifest.webmanifest",
   applicationName: "Vayro",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Vayro" },
+  icons: { icon: "/icons/vayro-app.svg", apple: "/icons/vayro-app.svg" },
   title: { default: "Vayro — Rent anything that moves", template: "%s | Vayro" },
   description: "Rent cars, RVs, boats, motorcycles, and adventure vehicles from trusted local owners.",
   openGraph: { type: "website", siteName: "Vayro", title: "Vayro — Rent anything that moves", description: "Your next adventure vehicle, rented from a local owner." },
