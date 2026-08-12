@@ -7,6 +7,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const user = await requireUser();
     const { id } = await params;
+    const body=await request.json().catch(()=>({}));
+    if(body.policyAccepted!==true)return NextResponse.json({error:"Accept the Terms and Cancellation Policy before checkout"},{status:400});
     const booking = await db.booking.findUnique({ where: { id }, include: { listing: { include: { owner: true } } } });
     if (!booking || booking.renterId !== user.id) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     if (!["ACCEPTED", "PAYMENT_REQUIRED", "PAYMENT_FAILED"].includes(booking.status)) return NextResponse.json({ error: "The owner must accept before payment" }, { status: 409 });
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       metadata: { bookingId: booking.id, type: "BOOKING" },
       success_url: `${origin}/dashboard/trips?payment=success`, cancel_url: `${origin}/dashboard/trips?payment=canceled`,
     });
-    await db.booking.update({ where: { id: booking.id }, data: { status: "PAYMENT_REQUIRED", stripeCheckoutSessionId: session.id, paymentStatus: "CHECKOUT_CREATED" } });
+    await db.$transaction([db.booking.update({ where: { id: booking.id }, data: { status: "PAYMENT_REQUIRED", stripeCheckoutSessionId: session.id, paymentStatus: "CHECKOUT_CREATED",policyVersion:"2026-08-12" } }),db.policyAcceptance.upsert({where:{userId_policy_version:{userId:user.id,policy:"BOOKING_TERMS",version:"2026-08-12"}},create:{userId:user.id,policy:"BOOKING_TERMS",version:"2026-08-12"},update:{acceptedAt:new Date()}})]);
     return NextResponse.json({ url: session.url });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to start payment" }, { status: 500 });

@@ -25,6 +25,14 @@ export async function POST(request: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.metadata?.bookingId) await db.booking.updateMany({ where: { id: session.metadata.bookingId, paymentStatus: "CHECKOUT_CREATED" }, data: { status: "PAYMENT_FAILED", paymentStatus: "FAILED" } });
     }
+    if(event.type==="charge.refunded"){
+      const charge=event.data.object as Stripe.Charge,paymentIntent=typeof charge.payment_intent==="string"?charge.payment_intent:charge.payment_intent?.id;
+      if(paymentIntent)await db.booking.updateMany({where:{stripePaymentIntentId:paymentIntent},data:{status:"REFUNDED",paymentStatus:"REFUNDED",refundAmount:Math.round(charge.amount_refunded/100)}});
+    }
+    if(event.type==="refund.failed"){
+      const refund=event.data.object as Stripe.Refund,paymentIntent=typeof refund.payment_intent==="string"?refund.payment_intent:refund.payment_intent?.id;
+      if(paymentIntent)await db.booking.updateMany({where:{stripePaymentIntentId:paymentIntent,paymentStatus:"REFUND_PENDING"},data:{status:"DISPUTED",paymentStatus:"FAILED"}});
+    }
     if (event.type === "account.updated") {
       const account = event.data.object as Stripe.Account;
       await db.user.updateMany({ where: { stripeConnectAccountId: account.id }, data: { stripeChargesEnabled: !!account.charges_enabled, stripePayoutsEnabled: !!account.payouts_enabled } });

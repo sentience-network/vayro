@@ -35,6 +35,7 @@ export function ApiButton({ url, body, label, method = "POST", className = "butt
     try { await jsonFetch(url, method, body); router.refresh(); } catch (error) { alert((error as Error).message); } finally { setBusy(false); }
   }}>{busy ? "Working…" : label}</button>;
 }
+export function PolicyAcceptButton({accepted}:{accepted:boolean}){return <ApiButton url="/api/policies/accept" body={{policy:"OWNER_AGREEMENT",version:"2026-08-12"}} label={accepted?"Agreement accepted ✓":"I have read and accept the Owner Agreement"} className={accepted?"success":"button"}/>}
 
 export function MobileNav({ links, loggedIn }: { links: { href: string; label: string }[]; loggedIn: boolean }) {
   const [open, setOpen] = useState(false);
@@ -68,6 +69,8 @@ export function RecentlyViewed() {
 }
 
 export function RedirectButton({url,label,className="button"}:{url:string;label:string;className?:string}){const[busy,setBusy]=useState(false);return <button className={className} disabled={busy} onClick={async()=>{setBusy(true);try{const result=await jsonFetch(url,"POST");if(!result.url)throw new Error("Provider did not return a secure URL");window.location.assign(result.url)}catch(error){alert((error as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":label}</button>}
+
+export function BookingCheckoutButton({bookingId}:{bookingId:string}){const[accepted,setAccepted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");return <div className="checkoutaccept"><label className="check"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/> I accept the <Link href="/terms" target="_blank">Terms</Link> and <Link href="/cancellation-policy" target="_blank">Cancellation Policy</Link>.</label><button className="button" disabled={!accepted||busy} onClick={async()=>{setBusy(true);setError("");try{const result=await jsonFetch(`/api/bookings/${bookingId}/checkout`,"POST",{policyAccepted:true});if(!result.url)throw new Error("Stripe did not return a secure checkout URL");window.location.assign(result.url)}catch(e){setError((e as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":"Pay securely with Stripe"}</button>{error&&<small className="error">{error}</small>}</div>}
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter(); const [error, setError] = useState("");
