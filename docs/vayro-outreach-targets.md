@@ -2,6 +2,19 @@
 
 Prepared 2026-08-12. These are ranked targets for a first outreach sequence, not endorsements or confirmed deal interest. Use the official contact/application path shown; do not guess individual email addresses. Each message should identify Vayro as an early-stage marketplace and avoid claiming traction that has not been verified.
 
+## Direct outreach sent
+
+On 2026-08-12, personalized messages were sent from d.c.hurst21@gmail.com to these publicly listed business inboxes:
+
+- founders@autotechvc.com
+- info@mobility.vc
+- jake@maniv.com
+- admin@bonzah.com
+- contact@tint.ai
+- affiliatemanager@marriott.com
+
+The remaining targets publish forms, portals, or general partnership pages rather than verified direct inboxes. Those should be handled through the official application path, not guessed email addresses.
+
 ## Funding and strategic capital (20)
 
 | Rank | Target | Why it fits | Official path |
