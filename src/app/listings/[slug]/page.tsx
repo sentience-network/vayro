@@ -13,6 +13,7 @@ import {
 import type { Metadata } from "next";
 import { OwnerLink } from "@/components/MarketplaceEnhancements";
 import { TireRating } from "@/components/TireRating";
+import { marketplaceFeePercent } from "@/lib/marketplace";
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,category:true,details:true,photos:{take:1,select:{url:true}}}});if(!listing)return{title:"Listing not found"};const details=listing.details as Record<string,string>,photo=isRepresentative(details)?vehiclePhotoPlaceholder(listing.category,details):listing.photos[0]?.url;return{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:photo?[photo]:[]}};}
 export default async function ListingDetail({
@@ -176,7 +177,7 @@ export default async function ListingDetail({
                 listingId={listing.id}
                 price={listing.pricePerDay}
                 feePayer={listing.feePayer}
-                feeRate={user.subscriptionStatus === "ACTIVE" ? 7.5 : 10}
+                feeRate={marketplaceFeePercent(listing.category, user.subscriptionStatus === "ACTIVE" && (!user.subscriptionEndsAt || user.subscriptionEndsAt > new Date()))}
                 representative={representative}
               />
               <ApiButton

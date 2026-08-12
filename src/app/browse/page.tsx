@@ -5,6 +5,7 @@ import { getUser } from "@/lib/auth";
 import { ListingCard } from "@/components/ListingCard";
 import { SaveSearchButton } from "@/components/FeatureForms";
 import { AdSense } from "@/components/AdSense";
+import { QUICK_CATEGORIES } from "@/lib/marketplace";
 const PAGE_SIZE = 6;
 export default async function Browse({
   searchParams,
@@ -97,7 +98,7 @@ export default async function Browse({
       <span className="eyebrow">FIND YOUR WAY OUT</span>
       <h1>Explore the fleet</h1>
       <div className="quickfilters" aria-label="Popular categories">
-        {["Car", "SUV", "RV", "Boat", "Motorcycle", "Travel trailer"].map(category => <Link className={q.category === category ? "active" : ""} key={category} href={`/browse?${new URLSearchParams({...q,category,page:"1"})}`}>{category}</Link>)}
+        {QUICK_CATEGORIES.map(category => <Link className={q.category === category ? "active" : ""} key={category} href={category === "Luxury" ? "/lux" : `/browse?${new URLSearchParams({...q,category,page:"1"})}`}>{category === "Luxury" ? "Vayro Lux" : category}</Link>)}
         <Link className={q.photos==="representative"?"active":""} href={`/browse?${new URLSearchParams({...q,photos:"representative",page:"1"})}`}>No actual photos</Link>
       </div>
       <form className="filters improved">
@@ -134,7 +135,7 @@ export default async function Browse({
             "UTV",
             "Other",
           ].map((x) => (
-            <option key={x}>{x}</option>
+            <option key={x} value={x}>{x === "Luxury" ? "Vayro Lux" : x}</option>
           ))}
         </select>
         <input name="make" aria-label="Vehicle make" placeholder="Make" defaultValue={q.make}/>

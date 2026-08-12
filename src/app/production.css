@@ -73,3 +73,8 @@ footer small{line-height:1.5}
 @media(max-width:800px){.page{padding-inline:20px}.titleline{align-items:flex-start;flex-direction:column;gap:2px}.heroactions .button{width:100%}.heroactions{width:min(100%,320px)}.trustbar span,.trustbar>a{min-height:58px}.pagination{gap:10px;flex-wrap:wrap}}
 .demo-page{max-width:1120px}.demovideo{display:block;width:100%;margin:30px 0 20px;border-radius:20px;border:4px solid #fff;box-shadow:var(--shadow-lg);background:#0b2c1e}.demoactions{display:flex;gap:12px;align-items:center;margin:15px 0 10px}
 @media(max-width:600px){.demoactions{flex-direction:column;align-items:stretch}.demoactions a{text-align:center}}
+
+.luxhero{display:grid;grid-template-columns:1.4fr .8fr;gap:30px;margin:30px 0 70px;padding:34px;background:linear-gradient(135deg,#102d20,#183f2d);color:#fff;border-color:#a66f38}
+.luxhero h2,.luxhero p{color:#fff}.luxhero .button{background:var(--lime);color:var(--ink)}
+.luxfacts{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:center}.luxfacts span{background:#ffffff16;border:1px solid #ffffff2e;border-radius:14px;padding:18px}.luxfacts b{display:block;font:28px Georgia;color:var(--lime)}.luxfacts small{color:#d9e5dd}.luxnotice{margin-top:40px}.luxuryquote{display:flex;flex-direction:column;gap:4px;margin:14px 0;padding:14px;border:1px solid #c79b38;border-radius:12px;background:#fff7d6;color:#573c08}
+@media(max-width:800px){.luxhero{grid-template-columns:1fr}.luxfacts{grid-template-columns:1fr 1fr}}

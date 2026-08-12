@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { bookingSchema } from "@/lib/validation";
 import { differenceInCalendarDays } from "date-fns";
 import { isRepresentative } from "@/lib/listing-images";
+import { marketplaceFeeRate } from "@/lib/marketplace";
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser(),raw=await request.json(),
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
         isPlus =
           user.subscriptionStatus === "ACTIVE" &&
           (!user.subscriptionEndsAt || user.subscriptionEndsAt > new Date()),
-        serviceFeeRate = isPlus ? 750 : 1000,
+        serviceFeeRate = marketplaceFeeRate(listing.category, isPlus),
         serviceFee = Math.round((subtotal * serviceFeeRate) / 10000),
         renterFee =
           listing.feePayer === "RENTER"
