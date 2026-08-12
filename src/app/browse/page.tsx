@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { ListingCard } from "@/components/ListingCard";
 import { SaveSearchButton } from "@/components/FeatureForms";
+import { AdSense } from "@/components/AdSense";
 const PAGE_SIZE = 6;
 export default async function Browse({
   searchParams,
@@ -202,6 +203,7 @@ export default async function Browse({
         </p>
         <div className="actions">{user && Object.keys(savedQuery).length > 0 && <SaveSearchButton query={savedQuery}/>} {Object.keys(q).length > 0 && <Link href="/browse">Clear filters ×</Link>}</div>
       </div>
+      {user?.subscriptionStatus!=="ACTIVE"&&<AdSense publisherId={process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID||""} slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID||""}/>}
       {listings.length ? (
         <>
           <div className="grid">
