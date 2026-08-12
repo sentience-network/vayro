@@ -13,7 +13,7 @@ export default function DemoPage() {
     <div className="demofleet">
       {DEMO_FLEET.map(vehicle => <article className="democard" key={vehicle.slug}>
         <div className="democardphoto"><img src={vehicle.image} alt={vehicle.title + " demo vehicle"} loading="lazy" /><span>DEMO VEHICLE</span></div>
-        <div className="democardbody"><div className="spread"><span className="pill">{vehicle.category === "Luxury" ? "Vayro Lux" : vehicle.category}</span><small>Photo: {vehicle.source}</small></div><h2>{vehicle.title}</h2><p>{vehicle.description}</p><p className="muted">{vehicle.location} · {"$"}{vehicle.price}/day sample price</p><DemoBookingButton title={vehicle.title} /></div>
+        <div className="democardbody"><div className="spread"><span className="pill">{vehicle.category === "Luxury" ? "Vayro Lux" : vehicle.category}</span><small>Photo: {vehicle.source}</small></div><h2>{vehicle.title}</h2><p>{vehicle.description}</p><p className="muted">{vehicle.location} · {"$"}{vehicle.price}/day sample price</p><DemoBookingButton title={vehicle.title} price={vehicle.price} category={vehicle.category} /></div>
       </article>)}
     </div>
     <div className="demoactions"><Link className="button bright" href="/register">Create a real account</Link><Link className="outline" href="/">Back to Vayro</Link></div>
