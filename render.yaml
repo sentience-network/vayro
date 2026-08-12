@@ -10,7 +10,9 @@ services:
     plan: free
     region: oregon
     buildCommand: npm ci --include=dev --no-audit --no-fund && npm run build -- --webpack
-    startCommand: npm run db:deploy && npm run start
+    # Neon pooled URLs can time out on Prisma's advisory lock during a
+    # Render restart. The wrapper retries migrations and then starts Next.js.
+    startCommand: bash scripts/render-start.sh
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

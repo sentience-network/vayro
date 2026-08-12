@@ -34,7 +34,7 @@ The included `render.yaml` provisions a Node web service and Render PostgreSQL d
 npm run db:seed
 ```
 
-Do not put seeding in the start command: the demo seed resets data. Build is `npm ci --include=dev && npm run build`; start is `npm run db:deploy && npm run start`; health check is `/api/health`. The explicit `--include=dev` keeps Tailwind/PostCSS available during Render's production compilation.
+Do not put seeding in the start command: the demo seed resets data. Build is `npm ci --include=dev && npm run build`; Render starts with `bash scripts/render-start.sh`, which retries `prisma migrate deploy` (with Prisma's advisory lock disabled for Neon pooled endpoints) before running `npm run start`; health check is `/api/health`. The explicit `--include=dev` keeps Tailwind/PostCSS available during Render's production compilation.
 
 For a custom domain, add the domain in the Render service's **Settings → Custom Domains** page and copy Render's DNS records to the domain registrar. Keep the generated `onrender.com` address enabled as a fallback.
 
