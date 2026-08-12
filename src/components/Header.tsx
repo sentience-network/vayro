@@ -11,6 +11,7 @@ export async function Header() {
     { href: "/pricing", label: "Plus" },
     { href: "/lux", label: "Vayro Lux" },
     { href: "/perks", label: "Perks" },
+    { href: "/demo", label: "Demo" },
     { href: "/safety", label: "Safety" },
     ...(user ? [
       { href: "/saved-searches", label: "Saved" },
