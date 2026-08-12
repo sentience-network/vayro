@@ -72,8 +72,7 @@ export default async function ListingDetail({
       </nav>
       {representative && (
         <div className="photo-disclaimer">
-          <b>Vehicle photo needed:</b> the owner has not uploaded a photo. The
-          graphic below identifies the listed make and model but is not a photo of the vehicle.
+          <b>REPRESENTATIVE GRAPHIC — NOT THE ACTUAL VEHICLE:</b> the owner has not uploaded photos. Confirm condition, identity, documents, and specifications directly with the owner before the handoff.
         </div>
       )}
       <div className="gallery">
@@ -178,6 +177,7 @@ export default async function ListingDetail({
                 price={listing.pricePerDay}
                 feePayer={listing.feePayer}
                 feeRate={user.subscriptionStatus === "ACTIVE" ? 7.5 : 10}
+                representative={representative}
               />
               <ApiButton
                 url={`/api/favorites/${listing.id}`}

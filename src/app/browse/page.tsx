@@ -47,6 +47,7 @@ export default async function Browse({
       q.transmission ? { details: { path: ["transmission"], equals: q.transmission } } : {},
       q.fuelType ? { details: { path: ["fuelType"], string_contains: q.fuelType } } : {},
       q.instantBook === "true" ? { instantBook: true } : {},
+      q.photos==="representative"?{OR:[{details:{path:["_photoSource"],equals:"VAYRO_PLACEHOLDER"}},{details:{path:["_photoSource"],equals:"VAYRO_REPRESENTATIVE"}}]}:q.photos==="actual"?{details:{path:["_photoSource"],equals:"OWNER"}}:{},
       q.delivery ? { deliveryOptions: { has: q.delivery } } : {},
       validDates
         ? {
@@ -96,6 +97,7 @@ export default async function Browse({
       <h1>Explore the fleet</h1>
       <div className="quickfilters" aria-label="Popular categories">
         {["Car", "SUV", "RV", "Boat", "Motorcycle", "Travel trailer"].map(category => <Link className={q.category === category ? "active" : ""} key={category} href={`/browse?${new URLSearchParams({...q,category,page:"1"})}`}>{category}</Link>)}
+        <Link className={q.photos==="representative"?"active":""} href={`/browse?${new URLSearchParams({...q,photos:"representative",page:"1"})}`}>No actual photos</Link>
       </div>
       <form className="filters improved">
         <input
@@ -179,6 +181,7 @@ export default async function Browse({
           <option value="Airport delivery">Airport delivery</option>
         </select>
         <label className="instantcheck"><input name="instantBook" type="checkbox" value="true" defaultChecked={q.instantBook==="true"}/> Instant booking</label>
+        <select name="photos" aria-label="Photo type" defaultValue={q.photos||""}><option value="">Any photo status</option><option value="actual">Actual vehicle photos</option><option value="representative">Representative graphic only</option></select>
         <select
           name="sort"
           aria-label="Sort results"

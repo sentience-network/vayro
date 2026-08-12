@@ -3,10 +3,11 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { bookingSchema } from "@/lib/validation";
 import { differenceInCalendarDays } from "date-fns";
+import { isRepresentative } from "@/lib/listing-images";
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireUser(),
-      parsed = bookingSchema.safeParse(await request.json());
+    const user = await requireUser(),raw=await request.json(),
+      parsed = bookingSchema.safeParse(raw);
     if(user.identityVerificationStatus!=="VERIFIED")return NextResponse.json({error:"Complete identity verification before requesting a booking"},{status:403});
     if (!parsed.success)
       return NextResponse.json(
@@ -22,6 +23,8 @@ export async function POST(request: NextRequest) {
         listing.ownerId === user.id
       )
         throw new Error("Unavailable");
+      const representative=isRepresentative(listing.details);
+      if(representative&&raw.representativePhotoAccepted!==true)throw new Error("Acknowledge that Vayro is not showing a photo of the actual vehicle");
       const overlap = await tx.booking.findFirst({
         where: {
           listingId,
@@ -67,6 +70,7 @@ export async function POST(request: NextRequest) {
         },
       });
       await tx.notification.create({ data: { userId: listing.ownerId, type: "BOOKING_REQUEST", title: "New booking request", body: `${user.name} requested ${listing.title}.`, href: "/owner" } });
+      if(representative)await tx.policyAcceptance.upsert({where:{userId_policy_version:{userId:user.id,policy:`REPRESENTATIVE_PHOTO:${listing.id}`,version:"2026-08-12"}},create:{userId:user.id,policy:`REPRESENTATIVE_PHOTO:${listing.id}`,version:"2026-08-12"},update:{acceptedAt:new Date()}});
       return booking;
     });
     return NextResponse.json(result);
