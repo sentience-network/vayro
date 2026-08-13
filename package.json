@@ -16,7 +16,8 @@
     "catalog:sync": "tsx scripts/sync-vehicle-catalog.ts",
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate",
-    "render:build": "next build"
+    "render:build": "next build",
+    "audit:routes": "python3 scripts/audit-routes.py"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
