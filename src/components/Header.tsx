@@ -27,6 +27,7 @@ export async function Header() {
     <Link href="/" className="logo" aria-label="Vayro home">Vayro<span>↗</span></Link>
     <nav className="desktopnav" aria-label="Primary navigation">
       {links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}
+      <Link href="/owner/new" className="button small ownercta">List a vehicle</Link>
       {user ? <ApiButton url="/api/auth/logout" label="Log out" className="quiet" /> : <><Link href="/login">Log in</Link><Link href="/register" className="button small">Join Vayro</Link></>}
     </nav>
     <MobileNav links={links} loggedIn={!!user} />

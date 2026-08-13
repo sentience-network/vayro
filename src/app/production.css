@@ -49,6 +49,7 @@ header{padding-inline:clamp(22px,5vw,76px)}
 header .desktopnav{gap:clamp(13px,1.8vw,27px)}
 .desktopnav .quiet{font-size:13px;color:#3e4e45;padding:8px 2px;font-weight:650}
 .desktopnav .button.small{padding:10px 18px}
+.desktopnav .ownercta{background:var(--bronze);color:#fff}.desktopnav .ownercta:hover{background:#8d5b2e}
 .page{width:min(1500px,100%);padding-inline:clamp(20px,6vw,92px)}
 .sectionhead a,.breadcrumbs a{color:var(--green-3);font-weight:700}
 .lede{max-width:760px;font-size:clamp(18px,2vw,22px);line-height:1.5;color:#536259}

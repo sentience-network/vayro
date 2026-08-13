@@ -41,10 +41,11 @@ export function MobileNav({ links, loggedIn }: { links: { href: string; label: s
   const [open, setOpen] = useState(false);
   useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
   return <div className="mobilenav">
-    <button className="menubutton" aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? "×" : "☰"}</button>
+    <button type="button" className="menubutton" aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? "×" : "☰"}</button>
     {open && <div className="menubackdrop" onClick={() => setOpen(false)}><nav id="mobile-menu" aria-label="Mobile navigation" onClick={event => event.stopPropagation()}>
-      <div className="spread"><b>Menu</b><button className="quiet" onClick={() => setOpen(false)}>Close ×</button></div>
+      <div className="spread"><b>Menu</b><button type="button" className="quiet" onClick={() => setOpen(false)}>Close ×</button></div>
       {links.map(link => <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>)}
+      <Link href="/owner/new" className="button" onClick={() => setOpen(false)}>List a vehicle</Link>
       {loggedIn ? <ApiButton url="/api/auth/logout" label="Log out" className="outline" /> : <><Link href="/login" onClick={() => setOpen(false)}>Log in</Link><Link href="/register" className="button" onClick={() => setOpen(false)}>Join Vayro</Link></>}
     </nav></div>}
   </div>;
@@ -70,7 +71,7 @@ export function RecentlyViewed() {
 
 export function RedirectButton({url,label,className="button"}:{url:string;label:string;className?:string}){const[busy,setBusy]=useState(false);return <button type="button" className={className} disabled={busy} aria-busy={busy} onClick={async()=>{setBusy(true);try{const result=await jsonFetch(url,"POST");if(!result.url)throw new Error("Provider did not return a secure URL");window.location.assign(result.url)}catch(error){alert((error as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":label}</button>}
 
-export function BookingCheckoutButton({bookingId}:{bookingId:string}){const[accepted,setAccepted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");return <div className="checkoutaccept"><label className="check"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/> I accept the <Link href="/terms" target="_blank">Terms</Link> and <Link href="/cancellation-policy" target="_blank">Cancellation Policy</Link>.</label><button className="button" disabled={!accepted||busy} onClick={async()=>{setBusy(true);setError("");try{const result=await jsonFetch(`/api/bookings/${bookingId}/checkout`,"POST",{policyAccepted:true});if(!result.url)throw new Error("Stripe did not return a secure checkout URL");window.location.assign(result.url)}catch(e){setError((e as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":"Pay securely with Stripe"}</button>{error&&<small className="error">{error}</small>}</div>}
+export function BookingCheckoutButton({bookingId}:{bookingId:string}){const[accepted,setAccepted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");return <div className="checkoutaccept"><label className="check"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/> I accept the <Link href="/terms" target="_blank">Terms</Link> and <Link href="/cancellation-policy" target="_blank">Cancellation Policy</Link>.</label><button type="button" className="button" disabled={!accepted||busy} aria-busy={busy} onClick={async()=>{setBusy(true);setError("");try{const result=await jsonFetch(`/api/bookings/${bookingId}/checkout`,"POST",{policyAccepted:true});if(!result.url)throw new Error("Stripe did not return a secure checkout URL");window.location.assign(result.url)}catch(e){setError((e as Error).message);setBusy(false)}}}>{busy?"Opening Stripe…":"Pay securely with Stripe"}</button>{error&&<small className="error" role="alert">{error}</small>}</div>}
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter(); const [error, setError] = useState("");

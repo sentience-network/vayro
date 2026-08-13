@@ -15,7 +15,7 @@ import { OwnerLink } from "@/components/MarketplaceEnhancements";
 import { TireRating } from "@/components/TireRating";
 import { marketplaceFeePercent } from "@/lib/marketplace";
 
-export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findUnique({where:{slug},select:{title:true,description:true,category:true,details:true,photos:{take:1,select:{url:true}}}});if(!listing)return{title:"Listing not found"};const details=listing.details as Record<string,string>,photo=isRepresentative(details)?vehiclePhotoPlaceholder(listing.category,details):listing.photos[0]?.url;return{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:photo?[photo]:[]}};}
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const listing=await db.listing.findFirst({where:{slug,status:"ACTIVE",NOT:{details:{path:["_photoSource"],equals:"VAYRO_REPRESENTATIVE"}}},select:{title:true,description:true,category:true,details:true,photos:{take:1,select:{url:true}}}});if(!listing)return{title:"Listing not found"};const details=listing.details as Record<string,string>,photo=isRepresentative(details)?vehiclePhotoPlaceholder(listing.category,details):listing.photos[0]?.url;return{title:listing.title,description:listing.description.slice(0,155),openGraph:{images:photo?[photo]:[]}};}
 export default async function ListingDetail({
   params,
 }: {
@@ -23,8 +23,8 @@ export default async function ListingDetail({
 }) {
   const { slug } = await params,
     user = await getUser();
-  const listing = await db.listing.findUnique({
-    where: { slug },
+  const listing = await db.listing.findFirst({
+    where: { slug, status: "ACTIVE", NOT: { details: { path: ["_photoSource"], equals: "VAYRO_REPRESENTATIVE" } } },
     include: {
       photos: { orderBy: { position: "asc" } },
       owner: true,

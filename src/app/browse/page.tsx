@@ -26,6 +26,7 @@ export default async function Browse({
   const savedQuery = Object.fromEntries(Object.entries(q).filter(([key,value]) => key !== "page" && Boolean(value)));
   const where: Prisma.ListingWhereInput = {
     status: "ACTIVE",
+    NOT: { details: { path: ["_photoSource"], equals: "VAYRO_REPRESENTATIVE" } },
     AND: [
       keyword
         ? {

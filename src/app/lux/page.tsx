@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function VayroLuxPage() {
   const user = await getUser();
   const listings = await db.listing.findMany({
-    where: { category: "Luxury", status: "ACTIVE" },
+    where: { category: "Luxury", status: "ACTIVE", NOT: { details: { path: ["_photoSource"], equals: "VAYRO_REPRESENTATIVE" } } },
     include: { photos: true, reviews: true },
     orderBy: { createdAt: "desc" },
   });
