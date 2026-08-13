@@ -36,6 +36,8 @@ npm run db:seed
 
 Do not put seeding in the start command: the demo seed resets data. Build is `npm ci --include=dev && npm run build`; `npm run db:deploy` retries `prisma migrate deploy` (with Prisma's advisory lock disabled for Neon pooled endpoints), and Render starts with `bash scripts/render-start.sh` before running `npm run start`; health check is `/api/health`. The explicit `--include=dev` keeps Tailwind/PostCSS available during Render's production compilation.
 
+Before calling a release live, run `npm run audit:routes` and `npm run smoke:test -- https://your-render-host.onrender.com`. The smoke test checks health/database connectivity plus the public homepage, Browse, demo, pricing, and safety routes. It does not create accounts, bookings, or payments.
+
 For a custom domain, add the domain in the Render service's **Settings → Custom Domains** page and copy Render's DNS records to the domain registrar. Keep the generated `onrender.com` address enabled as a fallback.
 
 ## Security notes
